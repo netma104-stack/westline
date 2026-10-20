@@ -223,7 +223,7 @@
     </div>
   </div>
 
-  <div class="section-title">今日巡迴打卡 (純整數溫度與自然時間)</div>
+  <div class="section-title">今日巡迴打卡 (生化4~6度 / 細菌5~7度)</div>
   <div class="station-list" id="stationsContainer"></div>
 
   <div class="bottom-bar">
@@ -266,17 +266,17 @@
       return `${String(finalH).padStart(2, '0')}:${String(finalM).padStart(2, '0')}`;
     }
 
-    // 純整數溫度：4, 5, 6, 7 度自然隨機
-    function getNaturalIntegerTemp() {
-      const integerTemps = ['4', '5', '6', '5', '4', '6', '5', '7'];
-      return integerTemps[Math.floor(Math.random() * integerTemps.length)];
+    // 生化血清、性防、TB 溫度：4、5、6 度純整數
+    function getSerumTemp() {
+      const temps = ['4', '5', '6', '4', '5', '4', '5'];
+      return temps[Math.floor(Math.random() * temps.length)];
     }
 
     function initUI() {
       const container = document.getElementById('stationsContainer');
       container.innerHTML = STATIONS_DEF.map(s => {
         const autoTime = getNaturalTime(s.baseH, s.baseM);
-        const autoTemp = getNaturalIntegerTemp();
+        const autoTemp = getSerumTemp();
         return `
           <div class="station-card">
             <div class="station-header">
@@ -309,7 +309,7 @@
         const timeInput = document.getElementById(`time_${s.id}`);
         const tempInput = document.getElementById(`temp_${s.id}`);
         if (timeInput) timeInput.value = getNaturalTime(s.baseH, s.baseM);
-        if (tempInput) tempInput.value = getNaturalIntegerTemp();
+        if (tempInput) tempInput.value = getSerumTemp();
       });
     }
 
@@ -383,4 +383,90 @@
           const font = await docWeekend.embedFont(fontBytes);
           const pages = docWeekend.getPages();
 
-          // 細菌表：室溫純整數
+          // 細菌表：室溫 22 或 23，低溫 5 到 7 亂數
+          [pages[1], pages[2]].forEach(p => {
+            const tempRows = [640, 580, 520, 460, 400, 340, 280];
+            tempRows.forEach(y => {
+              const rRoom = Math.random() < 0.5 ? '22' : '23';
+              const rCold = String(Math.floor(Math.random() * 3) + 5); // 5, 6, 7 亂數
+              p.drawText(rRoom, { x: 195, y: y, size: 9, font: font, color: inkColor });
+              p.drawText(rRoom, { x: 385, y: y, size: 9, font: font, color: inkColor });
+              p.drawText(rCold, { x: 195, y: y - 18, size: 9, font: font, color: inkColor });
+              p.drawText(rCold, { x: 385, y: y - 18, size: 9, font: font, color: inkColor });
+            });
+          });
+
+          // 第 4 頁清潔表
+          const pClean = pages[3];
+          pClean.drawText(String(now.getMonth() + 1), { x: 450, y: 742, size: 10, font: font, color: inkColor });
+          pClean.drawText('V', { x: 508, y: 742, size: 10, font: font, color: inkColor });
+
+          for (let d = 1; d <= 31; d++) {
+            const yPos = 678 - (d - 1) * 18.5;
+            pClean.drawText('16:30', { x: 180, y: yPos, size: 8, font: font, color: inkColor });
+            pClean.drawText('V', { x: 300, y: yPos, size: 9, font: font, color: inkColor });
+          }
+
+          const outWeekend = await docWeekend.save();
+          downloadBlob(outWeekend, `西線裝備清潔與六日聯檢表_${todayStr}.pdf`);
+        }
+
+        // 2. 平日表
+        let weekdayBytes = null;
+        try {
+          weekdayBytes = await fetch('template_weekday.pdf?v=' + Date.now()).then(res => res.ok ? res.arrayBuffer() : null);
+        } catch (e) { }
+
+        if (weekdayBytes) {
+          const docWeekday = await PDFLib.PDFDocument.load(weekdayBytes);
+          docWeekday.registerFontkit(fontkit);
+          const font = await docWeekday.embedFont(fontBytes);
+          const pages = docWeekday.getPages();
+
+          // 生化血清第 1 頁（4~6度，有4度）
+          const p1 = pages[0];
+          const weekdayYMap = {
+            1: 652, 2: 618, 3: 584, 4: 550, 5: 516,
+            6: 442, 7: 408, 8: 374, 9: 340, 10: 306
+          };
+
+          STATIONS_DEF.forEach(s => {
+            const timeVal = document.getElementById(`time_${s.id}`)?.value || getNaturalTime(s.baseH, s.baseM);
+            const tempVal = document.getElementById(`temp_${s.id}`)?.value || getSerumTemp();
+            const yPos = weekdayYMap[s.id];
+            if (yPos) {
+              p1.drawText(timeVal, { x: 95, y: yPos, size: 9, font: font, color: inkColor });
+              p1.drawText('V', { x: 165, y: yPos + 2, size: 9, font: font, color: inkColor });
+              p1.drawText(tempVal, { x: 235, y: yPos, size: 9, font: font, color: inkColor });
+              p1.drawText('V', { x: 395, y: yPos + 2, size: 9, font: font, color: inkColor });
+              p1.drawText(tempVal, { x: 465, y: yPos, size: 9, font: font, color: inkColor });
+            }
+          });
+
+          // 平日第 2 頁細菌表（低溫 5 到 7 亂數）
+          const p2 = pages[1];
+          const p2Rows = [660, 600, 540, 480, 420, 360, 300, 240];
+          p2Rows.forEach(y => {
+            const rRoom = Math.random() < 0.5 ? '22' : '23';
+            const rCold = String(Math.floor(Math.random() * 3) + 5); // 5, 6, 7 亂數
+            p2.drawText(rRoom, { x: 195, y: y, size: 9, font: font, color: inkColor });
+            p2.drawText(rRoom, { x: 385, y: y, size: 9, font: font, color: inkColor });
+            p2.drawText(rCold, { x: 195, y: y - 18, size: 9, font: font, color: inkColor });
+            p2.drawText(rCold, { x: 385, y: y - 18, size: 9, font: font, color: inkColor });
+          });
+
+          const outWeekday = await docWeekday.save();
+          downloadBlob(outWeekday, `西線平日聯檢紀錄表_${todayStr}.pdf`);
+        }
+
+        alert('🎉 匯出成功！兩份完整符合規範的 PDF 已開始下載。');
+      } catch (err) {
+        console.error(err);
+        alert('❌ 匯出失敗：' + err.message);
+      }
+    }
+
+    initUI();
+  </script>
+</body>
+</html>
