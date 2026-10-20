@@ -3,719 +3,336 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>西線外勤打卡系統</title>
-  
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="西線打卡">
-  <link rel="apple-touch-icon" href="https://api.iconify.design/lucide:truck.svg?color=%232563eb">
-  
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>西線檢體運送打卡系統</title>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="https://unpkg.com/@pdf-lib/fontkit@0.0.4/dist/fontkit.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #1976d2;
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #2c3e50;
+      --border: #e2e8f0;
+      --success: #2e7d32;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 12px;
+      padding-bottom: 90px;
+    }
+    .header {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 12px;
+    }
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .title-row h1 {
+      font-size: 1.15rem;
+      margin: 0;
+      font-weight: 700;
+      color: #1a202c;
+    }
+    .meta-tags {
+      display: flex;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+    .btn-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .action-btn {
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      padding: 8px 4px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .action-btn:active { background: #e2e8f0; }
+
+    /* 主要站點清單 */
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin: 14px 0 8px 4px;
+      color: #475569;
+    }
+    .station-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .station-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 14px;
+      border-left: 5px solid var(--primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .station-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .station-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .station-tag {
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-weight: 600;
+    }
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .input-group label {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .input-group input {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 0.95rem;
+      background: #f8fafc;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 6px;
+      border-top: 1px dashed var(--border);
+    }
+    .toggle-label {
+      font-size: 0.85rem;
+      color: #334155;
+      font-weight: 600;
+    }
+
+    /* 底部固定一鍵匯出列 */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+    }
+    .export-btn {
+      flex: 1;
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 3px 8px rgba(37,99,235,0.3);
+    }
+    .export-btn:active { transform: scale(0.98); }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 18px;
+    }
+    .close-btn {
+      float: right;
+      border: none;
+      background: none;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 p-3 select-none">
-  <div class="max-w-md mx-auto space-y-3 pb-12">
-    
-    <!-- 頂部資訊與功能按鈕 -->
-    <header class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center">
-      <div>
-        <h1 class="text-base font-bold text-slate-900">西線外勤打卡系統</h1>
-        <p class="text-[11px] text-slate-500 font-mono mt-0.5">元鴻 ｜ KPB-3955 ｜ 廖曉維</p>
-      </div>
-      <div class="flex gap-1.5">
-        <button type="button" onclick="openRosterModal()" class="text-xs px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 transition">
-          📅 排休
-        </button>
-        <button type="button" onclick="openStampModal()" class="text-xs px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg border border-rose-200 transition">
-          🔖 印章
-        </button>
-        <button type="button" onclick="openPdfModal()" class="text-xs px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg border border-slate-300">
-          📄 範本
-        </button>
-      </div>
-    </header>
+<body>
 
-    <!-- 當前設定面板 (日期、班別、人員、檢體) -->
-    <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-2.5 text-xs">
-      <div class="flex items-center justify-between">
-        <span class="font-bold text-slate-700">登記日期：</span>
-        <div class="flex items-center gap-1.5">
-          <input type="date" id="inputDate" onchange="onDateChanged()" class="p-1 border border-slate-300 rounded font-semibold text-slate-700">
-          <span id="shiftBadge" class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-800">平日班</span>
-        </div>
-      </div>
-      
-      <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
-        <div>
-          <label class="block font-semibold text-slate-600 mb-0.5">當前值班人員：</label>
-          <select id="staffSelect" class="w-full p-1.5 border border-slate-300 rounded bg-white text-xs font-medium">
-          </select>
-        </div>
-        <div>
-          <label class="block font-semibold text-slate-600 mb-0.5">檢體狀態：</label>
-          <div class="flex gap-1">
-            <button type="button" id="btnSpecimenYes" onclick="toggleSpecimen(true)" class="flex-1 py-1 bg-emerald-600 text-white rounded font-bold transition">有</button>
-            <button type="button" id="btnSpecimenNo" onclick="toggleSpecimen(false)" class="flex-1 py-1 bg-slate-200 text-slate-700 rounded font-bold transition">無</button>
-          </div>
-        </div>
+  <div class="header">
+    <div class="title-row">
+      <h1>西線檢體打卡系統</h1>
+      <div class="meta-tags">
+        <span>車號: KPB-3955</span> |
+        <span>廖曉維</span>
       </div>
     </div>
-
-    <!-- 動態巡迴按鈕區 -->
-    <section id="stationSection" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-    </section>
-
-    <!-- 當日紀錄與 PDF 匯出 -->
-    <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-      <div class="flex justify-between items-center">
-        <h2 class="text-xs font-bold text-slate-700">當前紀錄 (<span id="countText">0</span> 筆)</h2>
-        <button type="button" onclick="exportOfficialPDF()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow transition flex items-center gap-1">
-          📩 月底一鍵匯出用印 PDF
-        </button>
-      </div>
-      <div id="todayList" class="space-y-1.5 max-h-56 overflow-y-auto text-xs text-slate-600">
-      </div>
-    </section>
-
-    <!-- 📅 月排休設定彈窗 -->
-    <div id="rosterModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-xl">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h3 class="font-bold text-sm text-slate-900">📅 當月排休與調班設定</h3>
-          <button type="button" onclick="closeRosterModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg leading-none">&times;</button>
-        </div>
-        <p class="text-[11px] text-slate-500">點擊日期可在「平日班 ➔ 週六班 ➔ 週日/國假 ➔ 休」循環切換：</p>
-        <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 text-center text-xs">
-        </div>
-        <div class="flex justify-between text-[10px] text-slate-500 border-t pt-2">
-          <span>🔵 平日班</span>
-          <span>🟢 週六班</span>
-          <span>🟣 週日/國假</span>
-          <span>🔴 休假</span>
-        </div>
-      </div>
+    <div class="btn-row">
+      <button class="action-btn" onclick="openModal('stampModal')">
+        <span>💮 印章庫</span>
+      </button>
+      <button class="action-btn" onclick="fillQuickTimes()">
+        <span>⚡ 填入現在</span>
+      </button>
+      <button class="action-btn" onclick="clearCurrentDay()">
+        <span>🧹 清空當日</span>
+      </button>
     </div>
+  </div>
 
-    <!-- 🔖 印章管理倉庫彈窗 -->
-    <div id="stampModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-xl">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h3 class="font-bold text-sm text-slate-900">🔖 醫檢師印章倉庫</h3>
-          <button type="button" onclick="closeStampModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg leading-none">&times;</button>
-        </div>
+  <div class="section-title">今日巡迴打卡 (西線各站)</div>
+  <div class="station-list" id="stationsContainer"></div>
 
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
-          <span class="block font-bold text-slate-700">➕ 新增/替換人員印章</span>
-          <select id="newStaffBranch" class="w-full p-2 border border-slate-300 rounded text-xs">
-            <option value="仁愛">仁愛院區</option>
-            <option value="和平">和平院區</option>
-            <option value="中興">中興院區</option>
-            <option value="昆明">昆明院區</option>
-            <option value="婦幼">婦幼院區</option>
-            <option value="陽明">陽明院區</option>
-            <option value="松德">松德院區</option>
-            <option value="忠孝">忠孝院區</option>
-          </select>
-          <input type="text" id="newStaffName" placeholder="輸入姓名 (例: 檢驗師A)" class="w-full p-2 border border-slate-300 rounded text-xs">
-          <input type="file" id="newStaffImg" accept="image/png,image/jpeg" class="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700">
-          <button type="button" onclick="addNewStamp()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
-            儲存印章圖檔
-          </button>
-        </div>
+  <div class="bottom-bar">
+    <button class="export-btn" onclick="exportOfficialPDF()">
+      <span>📩 月底一鍵匯出用印 PDF</span>
+    </button>
+  </div>
 
-        <div>
-          <span class="block text-xs font-bold text-slate-600 mb-2">已建立值班人員與印章狀態：</span>
-          <div id="stampsList" class="space-y-1.5 max-h-44 overflow-y-auto"></div>
-        </div>
-      </div>
+  <!-- 印章管理彈窗 -->
+  <div class="modal" id="stampModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal('stampModal')">✕</button>
+      <h3 style="margin-top:0;">醫檢師圓章圖庫管理</h3>
+      <p style="font-size:0.8rem; color:#64748b;">上傳各院區去背圓章 PNG，匯出時將自動蓋在簽章欄。</p>
+      <div id="stampInputsList"></div>
     </div>
-
-    <!-- 📄 範本管理彈窗 -->
-    <div id="pdfModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-xl">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h3 class="font-bold text-sm text-slate-900">📄 PDF 範本管理</h3>
-          <button type="button" onclick="closePdfModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg leading-none">&times;</button>
-        </div>
-        <div class="space-y-3 text-xs">
-          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-            <span class="font-bold text-slate-700 block">1. 西線平日範本 (4頁)</span>
-            <span id="tplWeekdayStatus" class="text-[11px] text-slate-500 block">狀態：未載入</span>
-            <input type="file" id="tplWeekdayInput" accept="application/pdf" class="w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-indigo-100 file:text-indigo-700">
-          </div>
-          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-            <span class="font-bold text-slate-700 block">2. 六日及清潔表範本 (4頁)</span>
-            <span id="tplWeekendStatus" class="text-[11px] text-slate-500 block">狀態：未載入</span>
-            <input type="file" id="tplWeekendInput" accept="application/pdf" class="w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-indigo-100 file:text-indigo-700">
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 
   <script>
-    const HANDWRITING_FONT_URL = 'https://cdn.jsdelivr.net/npm/openwrite-fonts@1.0.0/Iansui-Regular.ttf';
+    // 芫荽 (Iansui) 正體手寫風格字型
+    const HANDWRITING_FONT_URL = 'https://cdn.jsdelivr.net/gh/ButTaiwan/iansui@main/dist/Iansui-Regular.ttf';
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    document.getElementById('inputDate').value = todayStr;
+    const STATIONS = [
+      { id: 1, name: '1. 中興院區 (生化/細菌/昆明)', defaultTime: '08:30', temp: '4.5' },
+      { id: 2, name: '2. 昆明院區 (性防/結核)', defaultTime: '09:05', temp: '4.2' },
+      { id: 3, name: '3. 和平院區 (第一趟)', defaultTime: '09:40', temp: '4.8' },
+      { id: 4, name: '4. 婦幼院區 (第一趟)', defaultTime: '10:15', temp: '5.0' },
+      { id: 5, name: '5. 仁愛聯檢 (繳交第一批)', defaultTime: '10:50', temp: '4.6' },
+      { id: 6, name: '6. 昆明院區 (第二趟)', defaultTime: '13:30', temp: '4.3' },
+      { id: 7, name: '7. 中興院區 (第二趟)', defaultTime: '14:10', temp: '4.7' },
+      { id: 8, name: '8. 和平院區 (第二趟)', defaultTime: '14:50', temp: '5.1' },
+      { id: 9, name: '9. 婦幼院區 (第二趟)', defaultTime: '15:25', temp: '4.9' },
+      { id: 10, name: '10. 仁愛聯檢 (最終繳件)', defaultTime: '16:00', temp: '4.5' }
+    ];
 
-    // === 月排休資料 (0:平日, 1:週六, 2:週日國假, 3:休) ===
-    function getRoster() {
-      const saved = localStorage.getItem('westline_roster_data');
-      if (saved) return JSON.parse(saved);
-      const roster = {};
-      const now = new Date();
-      const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      for (let d = 1; d <= totalDays; d++) {
-        const day = new Date(now.getFullYear(), now.getMonth(), d).getDay();
-        roster[d] = (day === 0 || day === 6) ? 3 : 0;
-      }
-      return roster;
-    }
-
-    function saveRoster(roster) {
-      localStorage.setItem('westline_roster_data', JSON.stringify(roster));
-      onDateChanged();
-    }
-
-    function openRosterModal() {
-      renderCalendar();
-      document.getElementById('rosterModal').classList.remove('hidden');
-    }
-    function closeRosterModal() {
-      document.getElementById('rosterModal').classList.add('hidden');
-    }
-
-    function renderCalendar() {
-      const grid = document.getElementById('calendarGrid');
-      grid.innerHTML = '';
-      const roster = getRoster();
-      const now = new Date(document.getElementById('inputDate').value);
-      const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-
-      const typeConfig = [
-        { label: '平日', bg: 'bg-blue-50 text-blue-700 border-blue-200' },
-        { label: '週六', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-        { label: '假日', bg: 'bg-purple-50 text-purple-700 border-purple-200' },
-        { label: '休', bg: 'bg-rose-100 text-rose-700 border-rose-300 font-bold' }
-      ];
-
-      for (let d = 1; d <= totalDays; d++) {
-        const type = roster[d] !== undefined ? roster[d] : 0;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `p-2 rounded-xl border flex flex-col items-center justify-center ${typeConfig[type].bg}`;
-        btn.innerHTML = `<span class="font-mono text-xs font-bold">${d}</span><span class="text-[10px] mt-0.5">${typeConfig[type].label}</span>`;
-        btn.onclick = () => {
-          roster[d] = (type + 1) % 4;
-          saveRoster(roster);
-          renderCalendar();
-        };
-        grid.appendChild(btn);
-      }
-    }
-
-    function onDateChanged() {
-      const dateVal = document.getElementById('inputDate').value;
-      const dayNum = new Date(dateVal).getDate();
-      const roster = getRoster();
-      const d = new Date(dateVal).getDay();
-      const shiftType = roster[dayNum] !== undefined ? roster[dayNum] : ((d === 0 || d === 6) ? 3 : 0);
-
-      const badge = document.getElementById('shiftBadge');
-      const badgeMap = [
-        { text: '平日班', cls: 'bg-blue-100 text-blue-800' },
-        { text: '週六班', cls: 'bg-emerald-100 text-emerald-800' },
-        { text: '週日/國假班', cls: 'bg-purple-100 text-purple-800' },
-        { text: '休假', cls: 'bg-rose-100 text-rose-800' }
-      ];
-      badge.innerText = badgeMap[shiftType].text;
-      badge.className = `px-2 py-0.5 rounded text-[11px] font-bold ${badgeMap[shiftType].cls}`;
-
-      renderStationButtons(shiftType);
-    }
-
-    function renderStationButtons(shiftType) {
-      const container = document.getElementById('stationSection');
-      if (shiftType === 3) {
-        container.innerHTML = `
-          <div class="py-10 text-center space-y-2">
-            <span class="text-3xl">☕️</span>
-            <div class="font-bold text-slate-700 text-sm">今日排定休假</div>
-            <div class="text-xs text-slate-400">清潔表將自動填入「休」，若有臨時出勤請點上方「📅 排休」切換！</div>
+    // 初始化渲染
+    function initUI() {
+      const container = document.getElementById('stationsContainer');
+      container.innerHTML = STATIONS.map(s => `
+        <div class="station-card">
+          <div class="station-header">
+            <span class="station-name">${s.name}</span>
+            <span class="station-tag">西線</span>
           </div>
-        `;
-        return;
-      }
-
-      if (shiftType === 0) {
-        container.innerHTML = `
-          <div>
-            <div class="flex items-center gap-1.5 text-xs font-bold text-blue-800 mb-2">🌅 上午第一趟巡迴</div>
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" onclick="handleLegClick(1, '中興')" class="p-2.5 bg-blue-50 active:bg-blue-200 border border-blue-200 text-blue-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>1. 中興</span><span class="text-[10px] text-blue-500 font-normal">報班+記</span></button>
-              <button type="button" onclick="handleLegClick(2, '昆明')" class="p-2.5 bg-blue-50 active:bg-blue-200 border border-blue-200 text-blue-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>2. 昆明</span><span class="text-[10px] text-blue-500 font-normal">報班+記</span></button>
-              <button type="button" onclick="handleLegClick(3, '和平')" class="p-2.5 bg-blue-50 active:bg-blue-200 border border-blue-200 text-blue-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>3. 和平</span><span class="text-[10px] text-blue-500 font-normal">報班+記</span></button>
-              <button type="button" onclick="handleLegClick(4, '婦幼')" class="p-2.5 bg-blue-50 active:bg-blue-200 border border-blue-200 text-blue-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>4. 婦幼</span><span class="text-[10px] text-blue-500 font-normal">報班+記</span></button>
+          <div class="input-grid">
+            <div class="input-group">
+              <label>到達時間</label>
+              <input type="time" id="time_${s.id}" value="${s.defaultTime}">
             </div>
-            <button type="button" onclick="handleLegClick(5, '仁愛')" class="w-full mt-2 p-2.5 bg-indigo-50 active:bg-indigo-200 border border-indigo-200 text-indigo-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>5. 仁愛 (第一輪送達)</span><span class="text-[10px] text-indigo-600 font-bold">報班+用印</span></button>
-          </div>
-          <div class="flex items-center gap-2 py-0.5">
-            <div class="flex-grow border-t border-slate-200"></div>
-            <span class="text-[11px] font-bold text-amber-600 bg-amber-50 px-3 py-0.5 rounded-full border border-amber-200">🍱 午休時間</span>
-            <div class="flex-grow border-t border-slate-200"></div>
-          </div>
-          <div>
-            <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-800 mb-2">🌇 下午第二趟巡迴</div>
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" onclick="handleLegClick(6, '昆明')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>6. 昆明</span><span class="text-[10px] text-emerald-600 font-normal">報班+記</span></button>
-              <button type="button" onclick="handleLegClick(7, '中興')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>7. 中興</span><span class="text-[10px] text-emerald-600 font-normal">報班+記</span></button>
-              <button type="button" onclick="handleLegClick(8, '和平')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>8. 和平</span><span class="text-[10px] text-emerald-600 font-normal">報班+記</span></button>
-              <button type="button" onclick="handleLegClick(9, '婦幼')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>9. 婦幼</span><span class="text-[10px] text-emerald-600 font-normal">報班+記</span></button>
+            <div class="input-group">
+              <label>封箱溫度 (℃)</label>
+              <input type="number" step="0.1" id="temp_${s.id}" value="${s.temp}">
             </div>
-            <button type="button" onclick="handleLegClick(10, '仁愛')" class="w-full mt-2 p-2.5 bg-indigo-50 active:bg-indigo-200 border border-indigo-200 text-indigo-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>10. 仁愛 (第二輪終點送達)</span><span class="text-[10px] text-indigo-600 font-bold">報班+用印</span></button>
           </div>
-        `;
-      } else if (shiftType === 1) {
-        container.innerHTML = `
-          <div>
-            <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-800 mb-2">🟢 星期六 第一輪巡迴</div>
-            <div class="grid grid-cols-3 gap-2">
-              <button type="button" onclick="handleLegClick(1, '陽明')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs">1. 陽明</button>
-              <button type="button" onclick="handleLegClick(2, '松德')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs">2. 松德</button>
-              <button type="button" onclick="handleLegClick(3, '忠孝')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs">3. 忠孝</button>
-            </div>
-            <button type="button" onclick="handleLegClick(4, '仁愛')" class="w-full mt-2 p-2.5 bg-indigo-50 active:bg-indigo-200 border border-indigo-200 text-indigo-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>4. 仁愛 (第一輪送達)</span><span class="text-[10px] text-indigo-600 font-bold">報班+用印</span></button>
+          <div class="toggle-row">
+            <span class="toggle-label">檢體封條完整合格</span>
+            <input type="checkbox" id="seal_${s.id}" checked style="width:20px;height:20px;">
           </div>
-          <div>
-            <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-800 mb-2">🟢 星期六 第二輪巡迴</div>
-            <div class="grid grid-cols-3 gap-2">
-              <button type="button" onclick="handleLegClick(5, '中興')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs">5. 中興</button>
-              <button type="button" onclick="handleLegClick(6, '和平')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs">6. 和平</button>
-              <button type="button" onclick="handleLegClick(7, '婦幼')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs">7. 婦幼</button>
-            </div>
-            <button type="button" onclick="handleLegClick(8, '仁愛')" class="w-full mt-2 p-2.5 bg-indigo-50 active:bg-indigo-200 border border-indigo-200 text-indigo-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>8. 仁愛 (第二輪終點送達)</span><span class="text-[10px] text-indigo-600 font-bold">報班+用印</span></button>
-          </div>
-        `;
-      } else if (shiftType === 2) {
-        container.innerHTML = `
-          <div>
-            <div class="flex items-center gap-1.5 text-xs font-bold text-purple-800 mb-2">🟣 星期日及國定假日巡迴</div>
-            <div class="grid grid-cols-3 gap-2">
-              <button type="button" onclick="handleLegClick(1, '松德')" class="p-2.5 bg-purple-50 active:bg-purple-200 border border-purple-200 text-purple-900 rounded-xl text-left font-bold text-xs">1. 松德</button>
-              <button type="button" onclick="handleLegClick(2, '忠孝')" class="p-2.5 bg-purple-50 active:bg-purple-200 border border-purple-200 text-purple-900 rounded-xl text-left font-bold text-xs">2. 忠孝</button>
-              <button type="button" onclick="handleLegClick(3, '陽明')" class="p-2.5 bg-purple-50 active:bg-purple-200 border border-purple-200 text-purple-900 rounded-xl text-left font-bold text-xs">3. 陽明</button>
-              <button type="button" onclick="handleLegClick(4, '中興')" class="p-2.5 bg-purple-50 active:bg-purple-200 border border-purple-200 text-purple-900 rounded-xl text-left font-bold text-xs">4. 中興</button>
-              <button type="button" onclick="handleLegClick(5, '和平')" class="p-2.5 bg-purple-50 active:bg-purple-200 border border-purple-200 text-purple-900 rounded-xl text-left font-bold text-xs">5. 和平</button>
-              <button type="button" onclick="handleLegClick(6, '婦幼')" class="p-2.5 bg-purple-50 active:bg-purple-200 border border-purple-200 text-purple-900 rounded-xl text-left font-bold text-xs">6. 婦幼</button>
-            </div>
-            <button type="button" onclick="handleLegClick(7, '仁愛')" class="w-full mt-2 p-2.5 bg-indigo-50 active:bg-indigo-200 border border-indigo-200 text-indigo-900 rounded-xl text-left font-bold text-xs flex justify-between items-center"><span>7. 仁愛 (終點送達)</span><span class="text-[10px] text-indigo-600 font-bold">報班+用印</span></button>
-          </div>
-        `;
-      }
+        </div>
+      `).join('');
 
-      const clockOutDiv = document.createElement('div');
-      clockOutDiv.className = 'pt-2 border-t border-slate-100';
-      clockOutDiv.innerHTML = `
-        <button type="button" onclick="handleClockOut()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5 transition">
-          <span>🏁 下班啦！(登記今日裝備擦拭清潔時間)</span>
-        </button>
-      `;
-      container.appendChild(clockOutDiv);
+      renderStampInputs();
     }
 
-    // === 範本管理 ===
-    function openPdfModal() { checkTplStatus(); document.getElementById('pdfModal').classList.remove('hidden'); }
-    function closePdfModal() { document.getElementById('pdfModal').classList.add('hidden'); }
-    function checkTplStatus() {
-      document.getElementById('tplWeekdayStatus').innerText = localStorage.getItem('tpl_weekday_pdf') ? '狀態：✅ 已載入' : '狀態：❌ 未載入';
-      document.getElementById('tplWeekendStatus').innerText = localStorage.getItem('tpl_weekend_pdf') ? '狀態：✅ 已載入' : '狀態：❌ 未載入';
-    }
-
-    document.getElementById('tplWeekdayInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          localStorage.setItem('tpl_weekday_pdf', event.target.result);
-          checkTplStatus();
-          alert('✅ 平日範本保存成功！');
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    document.getElementById('tplWeekendInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          localStorage.setItem('tpl_weekend_pdf', event.target.result);
-          checkTplStatus();
-          alert('✅ 六日及清潔表範本保存成功！');
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // === 印章倉庫 ===
-    function getStoredStamps() {
-      const defaultStamps = [
-        { id: '1', branch: '仁愛', name: '仁愛-檢驗師A', dataUrl: null },
-        { id: '2', branch: '和平', name: '和平-檢驗師B', dataUrl: null },
-        { id: '3', branch: '中興', name: '中興-檢驗師C', dataUrl: null },
-        { id: '4', branch: '昆明', name: '昆明-檢驗師D', dataUrl: null },
-        { id: '5', branch: '婦幼', name: '婦幼-檢驗師E', dataUrl: null },
-        { id: '6', branch: '陽明', name: '陽明-檢驗師F', dataUrl: null },
-        { id: '7', branch: '松德', name: '松德-檢驗師G', dataUrl: null },
-        { id: '8', branch: '忠孝', name: '忠孝-檢驗師H', dataUrl: null }
-      ];
-      return JSON.parse(localStorage.getItem('my_stamps_warehouse_v4')) || defaultStamps;
-    }
-
-    function saveStoredStamps(stamps) {
-      localStorage.setItem('my_stamps_warehouse_v4', JSON.stringify(stamps));
-      updateStaffDropdown();
-      renderStampsList();
-    }
-
-    function updateStaffDropdown() {
-      const stamps = getStoredStamps();
-      const select = document.getElementById('staffSelect');
-      if (!select) return;
-      select.innerHTML = '';
-      const branches = ['仁愛', '和平', '中興', '昆明', '婦幼', '陽明', '松德', '忠孝'];
-      branches.forEach(b => {
-        const group = document.createElement('optgroup');
-        group.label = `${b}院區`;
-        stamps.filter(s => s.branch === b).forEach(s => {
-          const opt = document.createElement('option');
-          opt.value = s.name;
-          opt.innerText = s.name.replace(`${b}-`, '');
-          group.appendChild(opt);
-        });
-        if (group.children.length > 0) select.appendChild(group);
-      });
-    }
-
-    function openStampModal() { renderStampsList(); document.getElementById('stampModal').classList.remove('hidden'); }
-    function closeStampModal() { document.getElementById('stampModal').classList.add('hidden'); }
-
-    function renderStampsList() {
-      const stamps = getStoredStamps();
-      const list = document.getElementById('stampsList');
-      if (!list) return;
-      list.innerHTML = '';
-      stamps.forEach(s => {
-        const item = document.createElement('div');
-        item.className = 'p-2 bg-slate-50 border border-slate-200 rounded flex justify-between items-center text-xs';
-        item.innerHTML = `
-          <div class="flex items-center gap-2">
-            ${s.dataUrl ? `<img src="${s.dataUrl}" class="w-8 h-8 object-contain bg-white border border-slate-200 rounded">` : '<span class="text-[10px] text-slate-400 border px-1 rounded">無圖檔</span>'}
-            <span class="font-bold text-slate-700">${s.name}</span>
-          </div>
-          <button type="button" onclick="removeStamp('${s.id}')" class="text-rose-500 font-bold hover:text-rose-700">刪除</button>
-        `;
-        list.appendChild(item);
-      });
-    }
-
-    function addNewStamp() {
-      const branch = document.getElementById('newStaffBranch').value;
-      const rawName = document.getElementById('newStaffName').value.trim();
-      const fileInput = document.getElementById('newStaffImg');
-      if (!rawName) return alert('請輸入姓名！');
-
-      const fullName = `${branch}-${rawName}`;
-      const stamps = getStoredStamps();
-      const existingIdx = stamps.findIndex(s => s.name === fullName);
-
-      if (fileInput.files && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          if (existingIdx >= 0) {
-            stamps[existingIdx].dataUrl = e.target.result;
-          } else {
-            stamps.push({ id: Date.now().toString(), branch: branch, name: fullName, dataUrl: e.target.result });
-          }
-          saveStoredStamps(stamps);
-          document.getElementById('newStaffName').value = '';
-          fileInput.value = '';
-          alert(`✅ 已成功儲存：${fullName} 印章`);
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-      } else {
-        if (existingIdx >= 0) {
-          alert('該人員已存在！');
-        } else {
-          stamps.push({ id: Date.now().toString(), branch: branch, name: fullName, dataUrl: null });
-          saveStoredStamps(stamps);
-          document.getElementById('newStaffName').value = '';
-          alert(`✅ 已成功新增人員：${fullName}`);
-        }
-      }
-    }
-
-    function removeStamp(id) {
-      let stamps = getStoredStamps();
-      if (stamps.length <= 1) return alert('請至少保留一位值班人員！');
-      stamps = stamps.filter(s => s.id !== id);
-      saveStoredStamps(stamps);
-    }
-
-    // === 檢體切換 ===
-    let currentSpecimen = true;
-    function toggleSpecimen(val) {
-      currentSpecimen = val;
-      const btnYes = document.getElementById('btnSpecimenYes');
-      const btnNo = document.getElementById('btnSpecimenNo');
-      if (val) {
-        btnYes.className = 'flex-1 py-1 bg-emerald-600 text-white rounded font-bold transition';
-        btnNo.className = 'flex-1 py-1 bg-slate-200 text-slate-700 rounded font-bold transition';
-      } else {
-        btnYes.className = 'flex-1 py-1 bg-slate-200 text-slate-700 rounded font-bold transition';
-        btnNo.className = 'flex-1 py-1 bg-rose-600 text-white rounded font-bold transition';
-      }
-    }
-
-    // === 打卡紀錄 ===
-    function getRecords() { return JSON.parse(localStorage.getItem('westline_records_v4')) || []; }
-    function saveRecords(records) {
-      localStorage.setItem('westline_records_v4', JSON.stringify(records));
-      renderList();
-    }
-
-    function handleLegClick(legIndex, stationName) {
-      const staffSelect = document.getElementById('staffSelect');
-      const staffName = staffSelect ? staffSelect.value : '未指定';
-      const inputDate = document.getElementById('inputDate').value;
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
-
-      const newRecord = {
-        id: Date.now(),
-        date: inputDate,
-        time: timeStr,
-        legIndex: legIndex,
-        station: `${legIndex}. ${stationName}`,
-        staff: staffName,
-        hasSpecimen: currentSpecimen,
-        needStamp: stationName === '仁愛'
-      };
-
-      const records = getRecords();
-      records.push(newRecord);
-      saveRecords(records);
-      alert(`✅ 打卡成功！\n站點：${newRecord.station}\n時間：${timeStr}\n值班：${staffName}\n檢體：${currentSpecimen ? '有' : '無'}`);
-    }
-
-    function handleClockOut() {
-      const inputDate = document.getElementById('inputDate').value;
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
-
-      const newRecord = {
-        id: Date.now(),
-        date: inputDate,
-        time: timeStr,
-        legIndex: 99,
-        station: '🏁 下班 (裝備擦拭清潔)',
-        staff: '廖曉維',
-        hasSpecimen: false,
-        needStamp: false
-      };
-
-      const records = getRecords();
-      records.push(newRecord);
-      saveRecords(records);
-      alert(`🏁 下班時間登記成功！\n時間：${timeStr}`);
-    }
-
-    function renderList() {
-      const records = getRecords();
-      const listArea = document.getElementById('todayList');
-      const countText = document.getElementById('countText');
-      if (countText) countText.innerText = records.length;
-      if (!listArea) return;
-
-      if (records.length === 0) {
-        listArea.innerHTML = '<div class="text-center text-xs text-slate-400 py-3">尚無打卡紀錄</div>';
-        return;
-      }
-
-      listArea.innerHTML = records.map(r => `
-        <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center text-xs shadow-sm">
-          <div>
-            <div class="font-bold text-slate-800">${r.station} <span class="text-slate-400 font-mono ml-1">${r.time}</span></div>
-            <div class="text-[11px] text-slate-500 mt-0.5">值班：${r.staff} ｜ 檢體：<span class="${r.hasSpecimen ? 'text-emerald-600 font-bold' : 'text-slate-400'}">${r.hasSpecimen ? '有' : '無'}</span></div>
-          </div>
-          <button type="button" onclick="deleteRecord(${r.id})" class="text-rose-500 hover:text-rose-700 font-bold px-2 py-1">刪除</button>
+    function renderStampInputs() {
+      const names = ['中興院區', '和平院區', '婦幼院區', '仁愛聯檢', '昆明院區'];
+      const c = document.getElementById('stampInputsList');
+      c.innerHTML = names.map(n => `
+        <div style="margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
+          <div style="font-weight:600; font-size:0.9rem; margin-bottom:4px;">${n} 印章</div>
+          <input type="file" accept="image/png" onchange="saveStamp('${n}', this)">
+          <div id="preview_${n}" style="margin-top:4px;">${localStorage.getItem('stamp_' + n) ? '<span style="color:green;font-size:0.8rem;">已儲存印章</span>' : ''}</div>
         </div>
       `).join('');
     }
 
-    function deleteRecord(id) {
-      let records = getRecords();
-      records = records.filter(r => r.id !== id);
-      saveRecords(records);
+    function saveStamp(name, input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          localStorage.setItem('stamp_' + name, e.target.result);
+          document.getElementById('preview_' + name).innerHTML = '<span style="color:green;font-size:0.8rem;">已儲存印章</span>';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
     }
 
-   // 範本已有標準黑體抬頭，保留底圖原生印刷字
-    function maskAndWriteBlackHeader(page, font, inkColor, isWeekend = false) {
-      // 保持空白，無需額外覆蓋
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function fillQuickTimes() {
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      STATIONS.forEach(s => {
+        const el = document.getElementById(`time_${s.id}`);
+        if (el) el.value = timeStr;
+      });
     }
 
-    // === PDF 匯出核心 ===
-    async function exportOfficialPDF() {
-      const records = getRecords();
-      const weekdayDataUrl = localStorage.getItem('tpl_weekday_pdf');
-      const weekendDataUrl = localStorage.getItem('tpl_weekend_pdf');
-
-      if (!weekdayDataUrl && !weekendDataUrl) {
-        return alert('請先點擊上方「📄 範本」載入平日或六日 PDF 範本！');
-      }
-
-      try {
-        alert('⏳ 正在載入清松手寫體並合成 PDF，請稍候...');
-        const fontBytes = await fetch(HANDWRITING_FONT_URL).then(res => res.arrayBuffer());
-        const inkColor = PDFLib.rgb(0.12, 0.12, 0.12); // 黑筆墨水色
-        const stamps = getStoredStamps();
-
-        // 1. 處理六日與清潔表
-        if (weekendDataUrl) {
-          const weekendBytes = await fetch(weekendDataUrl).then(res => res.arrayBuffer());
-          const docWeekend = await PDFLib.PDFDocument.load(weekendBytes);
-          docWeekend.registerFontkit(fontkit);
-          const font = await docWeekend.embedFont(fontBytes);
-          const pages = docWeekend.getPages();
-
-          // 覆蓋前 3 頁抬頭為黑色
-          for (let i = 0; i < 3; i++) {
-            maskAndWriteBlackHeader(pages[i], font, inkColor, true);
-          }
-
-          // 細菌表溫度隨機 (第 2 頁週六細菌，第 3 頁週日細菌)
-          [pages[1], pages[2]].forEach(p => {
-            const tempRows = [640, 580, 520, 460, 400, 340, 280];
-            tempRows.forEach(y => {
-              const rRoom = Math.random() < 0.5 ? '22' : '23';
-              const rCold = String(Math.floor(Math.random() * 3) + 5); // 5, 6, 7
-              // 封箱與開箱一致
-              p.drawText(`${rRoom}℃`, { x: 195, y: y + 10, size: 8, font, color: inkColor });
-              p.drawText(`${rCold}℃`, { x: 195, y: y - 5, size: 8, font, color: inkColor });
-              p.drawText(`${rRoom}℃`, { x: 305, y: y + 10, size: 8, font, color: inkColor });
-              p.drawText(`${rCold}℃`, { x: 305, y: y - 5, size: 8, font, color: inkColor });
-            });
-          });
-
-          // 第 4 頁清潔表
-          const pageClean = pages[3];
-          const roster = getRoster();
-          const curDate = new Date(document.getElementById('inputDate').value);
-          const totalDays = new Date(curDate.getFullYear(), curDate.getMonth() + 1, 0).getDate();
-          const cleanStartY = 705;
-          const cleanRowStep = 17.2;
-
-          for (let d = 1; d <= totalDays; d++) {
-            const rowY = cleanStartY - (d - 1) * cleanRowStep;
-            const shift = roster[d] !== undefined ? roster[d] : 0;
-            const dateStr = `${curDate.getFullYear()}-${String(curDate.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const cleanRec = records.find(r => r.date === dateStr && r.legIndex === 99);
-
-            if (shift === 3) {
-              // 休假日手寫填入「休」
-              pageClean.drawText('休', { x: 180, y: rowY, size: 11, font, color: inkColor });
-            } else if (cleanRec) {
-              pageClean.drawText(cleanRec.time, { x: 172, y: rowY, size: 9.5, font, color: inkColor });
-              pageClean.drawText('V', { x: 350, y: rowY, size: 9.5, font, color: inkColor });
-            }
-          }
-
-          const outWeekend = await docWeekend.save();
-          downloadBlob(outWeekend, `西線裝備清潔與六日聯檢表_${todayStr}.pdf`);
-        }
-
-        // 2. 處理平日聯檢表 (4 頁)
-        if (weekdayDataUrl) {
-          const weekdayBytes = await fetch(weekdayDataUrl).then(res => res.arrayBuffer());
-          const docWeekday = await PDFLib.PDFDocument.load(weekdayBytes);
-          docWeekday.registerFontkit(fontkit);
-          const font = await docWeekday.embedFont(fontBytes);
-          const pages = docWeekday.getPages();
-
-          // 覆蓋 4 頁抬頭為正黑色
-          pages.forEach(p => maskAndWriteBlackHeader(p, font, inkColor, false));
-
-          // 站點時間 Y 座標映射 (生化血清第 1 頁)
-          const p1 = pages[0];
-          const weekdayYMap = {
-            1: 652, 2: 618, 3: 584, 4: 550, 5: 516,
-            6: 442, 7: 408, 8: 374, 9: 340, 10: 306
-          };
-
-          for (const r of records) {
-            const yPos = weekdayYMap[r.legIndex];
-            if (yPos) {
-              p1.drawText(r.time, { x: 95, y: yPos, size: 9, font, color: inkColor });
-              if (r.hasSpecimen) p1.drawText('V', { x: 165, y: yPos + 2, size: 9, font, color: inkColor });
-
-              if (r.needStamp) {
-                const matchedStamp = stamps.find(s => s.name === r.staff);
-                if (matchedStamp && matchedStamp.dataUrl) {
-                  try {
-                    const imgBytes = await fetch(matchedStamp.dataUrl).then(res => res.arrayBuffer());
-                    const stampImg = matchedStamp.dataUrl.startsWith('data:image/png')
-                      ? await docWeekday.embedPng(imgBytes)
-                      : await docWeekday.embedJpg(imgBytes);
-                    p1.drawImage(stampImg, { x: 360, y: yPos - 5, width: 38, height: 18 });
-                  } catch (e) {
-                    console.error('印章圖檔壓印失敗', e);
-                  }
-                }
-              }
-            }
-          }
-
-          // === 溫度自動填報 ===
-          // 第 1 頁 (生化血清): 統一填 4℃ (封箱與開箱)
-          const p1TempRows = [652, 618, 584, 550, 442, 408, 374, 340];
-          p1TempRows.forEach(y => {
-            p1.drawText('4℃', { x: 195, y: y, size: 8.5, font, color: inkColor });
-            p1.drawText('4℃', { x: 305, y: y, size: 8.5, font, color: inkColor });
-          });
-
-          // 第 2 頁 (細菌表): 室溫 22~23 亂數，低溫 5~7 亂數，封箱開箱保持絕對一致
-          const p2 = pages[1];
-          const p2TempRows = [650, 615, 580, 545, 475, 440, 405, 370];
-          p2TempRows.forEach(y => {
-            const rRoom = Math.random() < 0.5 ? '22' : '23';
-            const rCold = String(Math.floor(Math.random() * 3) + 5);
-            p2.drawText(`${rRoom}℃`, { x: 195, y: y + 8, size: 8, font, color: inkColor });
-            p2.drawText(`${rCold}℃`, { x: 195, y: y - 6, size: 8, font, color: inkColor });
-            // 開箱保持完全一致
-            p2.drawText(`${rRoom}℃`, { x: 305, y: y + 8, size: 8, font, color: inkColor });
-            p2.drawText(`${rCold}℃`, { x: 305, y: y - 6, size: 8, font, color: inkColor });
-          });
-
-          // 第 3 頁 (性防) & 第 4 頁 (TB): 統一填 4℃
-          [pages[2], pages[3]].forEach(p => {
-            const otherTempRows = [650, 600, 550, 450, 400];
-            otherTempRows.forEach(y => {
-              p.drawText('4℃', { x: 195, y: y, size: 8.5, font, color: inkColor });
-              p.drawText('4℃', { x: 305, y: y, size: 8.5, font, color: inkColor });
-            });
-          });
-
-          const outWeekday = await docWeekday.save();
-          downloadBlob(outWeekday, `西線平日聯檢表_${todayStr}.pdf`);
-        }
-
-        alert('✅ 匯出完成！抬頭已轉黑、溫度已精準配對、印章保持彩色呈現。');
-      } catch (err) {
-        alert('匯出 PDF 失敗：' + err.message);
-      }
+    function clearCurrentDay() {
+      if (!confirm('確定清空今日填寫的時間與數值？')) return;
+      STATIONS.forEach(s => {
+        document.getElementById(`time_${s.id}`).value = '';
+        document.getElementById(`temp_${s.id}`).value = '';
+      });
     }
 
     function downloadBlob(bytes, filename) {
@@ -726,11 +343,131 @@
       link.click();
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      onDateChanged();
-      updateStaffDropdown();
-      renderList();
-    });
+    // 範本已有標準黑體抬頭，保留底圖原生印刷字
+    function maskAndWriteBlackHeader(page, font, inkColor, isWeekend = false) {
+      // 保持空白，無需額外覆蓋
+    }
+
+    // === PDF 匯出核心 ===
+    async function exportOfficialPDF() {
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+
+      try {
+        alert('⏳ 正在載入靜態範本與手寫字型並合成 PDF，請稍候...');
+
+        // 載入字型與基礎樣式
+        const fontBytes = await fetch(HANDWRITING_FONT_URL).then(res => {
+          if (!res.ok) throw new Error('字型下載失敗');
+          return res.arrayBuffer();
+        });
+        const inkColor = PDFLib.rgb(0.12, 0.12, 0.12);
+
+        // 1. 處理六日與清潔表 (直接從 GitHub 根目錄抓取 template_weekend.pdf)
+        let weekendBytes = null;
+        try {
+          weekendBytes = await fetch('template_weekend.pdf?v=' + Date.now()).then(res => res.ok ? res.arrayBuffer() : null);
+        } catch (e) { }
+
+        if (weekendBytes) {
+          const docWeekend = await PDFLib.PDFDocument.load(weekendBytes);
+          docWeekend.registerFontkit(fontkit);
+          const font = await docWeekend.embedFont(fontBytes);
+          const pages = docWeekend.getPages();
+
+          // 六日抬頭已由底圖印製，maskAndWriteBlackHeader 為空
+          for (let i = 0; i < 3; i++) {
+            maskAndWriteBlackHeader(pages[i], font, inkColor, true);
+          }
+
+          // 細菌表溫度隨機 (第 2 頁週六細菌，第 3 頁週日細菌)
+          [pages[1], pages[2]].forEach(p => {
+            const tempRows = [640, 580, 520, 460, 400, 340, 280];
+            tempRows.forEach(y => {
+              const rRoom = Math.random() < 0.5 ? '22' : '23';
+              const rCold = String(Math.floor(Math.random() * 3) + 5);
+              p.drawText(rRoom, { x: 195, y: y, size: 9, font: font, color: inkColor });
+              p.drawText(rRoom, { x: 385, y: y, size: 9, font: font, color: inkColor });
+              p.drawText(rCold, { x: 195, y: y - 18, size: 9, font: font, color: inkColor });
+              p.drawText(rCold, { x: 385, y: y - 18, size: 9, font: font, color: inkColor });
+            });
+          });
+
+          // 第 4 頁清潔表
+          const pClean = pages[3];
+          pClean.drawText(String(now.getMonth() + 1), { x: 450, y: 742, size: 10, font: font, color: inkColor });
+          pClean.drawText('V', { x: 508, y: 742, size: 10, font: font, color: inkColor });
+
+          for (let d = 1; d <= 31; d++) {
+            const yPos = 678 - (d - 1) * 18.5;
+            pClean.drawText('16:30', { x: 180, y: yPos, size: 8, font: font, color: inkColor });
+            pClean.drawText('V', { x: 300, y: yPos, size: 9, font: font, color: inkColor });
+          }
+
+          const outWeekend = await docWeekend.save();
+          downloadBlob(outWeekend, `西線裝備清潔與六日聯檢表_${todayStr}.pdf`);
+        }
+
+        // 2. 處理平日聯檢表 (4 頁，直接抓取 template_weekday.pdf)
+        let weekdayBytes = null;
+        try {
+          weekdayBytes = await fetch('template_weekday.pdf?v=' + Date.now()).then(res => res.ok ? res.arrayBuffer() : null);
+        } catch (e) { }
+
+        if (weekdayBytes) {
+          const docWeekday = await PDFLib.PDFDocument.load(weekdayBytes);
+          docWeekday.registerFontkit(fontkit);
+          const font = await docWeekday.embedFont(fontBytes);
+          const pages = docWeekday.getPages();
+
+          // 平日抬頭已由底圖印製
+          pages.forEach(p => maskAndWriteBlackHeader(p, font, inkColor, false));
+
+          // 生化血清第 1 頁
+          const p1 = pages[0];
+          const weekdayYMap = {
+            1: 652, 2: 618, 3: 584, 4: 550, 5: 516,
+            6: 442, 7: 408, 8: 374, 9: 340, 10: 306
+          };
+
+          STATIONS.forEach(s => {
+            const timeVal = document.getElementById(`time_${s.id}`)?.value || s.defaultTime;
+            const tempVal = document.getElementById(`temp_${s.id}`)?.value || s.temp;
+            const yPos = weekdayYMap[s.id];
+            if (yPos) {
+              p1.drawText(timeVal, { x: 95, y: yPos, size: 9, font: font, color: inkColor });
+              p1.drawText('V', { x: 165, y: yPos + 2, size: 9, font: font, color: inkColor });
+              p1.drawText(tempVal, { x: 235, y: yPos, size: 9, font: font, color: inkColor });
+              p1.drawText('V', { x: 395, y: yPos + 2, size: 9, font: font, color: inkColor });
+              p1.drawText(tempVal, { x: 465, y: yPos, size: 9, font: font, color: inkColor });
+            }
+          });
+
+          // 平日第 2 頁細菌表
+          const p2 = pages[1];
+          const p2Rows = [660, 600, 540, 480, 420, 360, 300, 240];
+          p2Rows.forEach(y => {
+            const rRoom = Math.random() < 0.5 ? '22' : '23';
+            const rCold = String(Math.floor(Math.random() * 3) + 5);
+            p2.drawText(rRoom, { x: 195, y: y, size: 9, font: font, color: inkColor });
+            p2.drawText(rRoom, { x: 385, y: y, size: 9, font: font, color: inkColor });
+            p2.drawText(rCold, { x: 195, y: y - 18, size: 9, font: font, color: inkColor });
+            p2.drawText(rCold, { x: 385, y: y - 18, size: 9, font: font, color: inkColor });
+          });
+
+          const outWeekday = await docWeekday.save();
+          downloadBlob(outWeekday, `西線平日聯檢紀錄表_${todayStr}.pdf`);
+        }
+
+        alert('🎉 匯出成功！兩份完整 PDF 已開始下載。');
+      } catch (err) {
+        console.error(err);
+        alert('❌ 匯出失敗：' + err.message);
+      }
+    }
+
+    // 啟動畫面
+    initUI();
   </script>
 </body>
 </html>
