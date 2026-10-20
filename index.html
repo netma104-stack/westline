@@ -50,4 +50,437 @@
           </select>
         </div>
         <div>
-          <label class="block font-semibold text-slate-60
+          <label class="block font-semibold text-slate-600 mb-0.5">檢體狀態：</label>
+          <div class="flex gap-1">
+            <button type="button" id="btnSpecimenYes" onclick="toggleSpecimen(true)" class="flex-1 py-1 bg-emerald-600 text-white rounded font-bold transition">有</button>
+            <button type="button" id="btnSpecimenNo" onclick="toggleSpecimen(false)" class="flex-1 py-1 bg-slate-200 text-slate-700 rounded font-bold transition">無</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 站點打卡按鈕區域 -->
+    <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+      <!-- 上半天 -->
+      <div>
+        <div class="flex items-center gap-1.5 text-xs font-bold text-blue-800 mb-2">
+          <span>🌅 上午第一趟巡迴</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="handleLegClick(1, '中興')" class="p-2.5 bg-blue-50 active:bg-blue-200 border border-blue-200 text-blue-900 rounded-xl text-left font-bold text-xs flex justify-between items-center transition">
+            <span>1. 中興</span><span class="text-[10px] text-blue-500 font-normal">報班+記</span>
+          </button>
+          <button type="button" onclick="handleLegClick(2, '昆明')" class="p-2.5 bg-blue-50 active:bg-blue-200 border border-blue-200 text-blue-900 rounded-xl text-left font-bold text-xs flex justify-between items-center transition">
+            <span>2. 昆明</span><span class="text-[10px] text-blue-500 font-normal">報班+記</span>
+          </button>
+          <button type="button" onclick="handleLegClick(3, '和平')" class="p-2.5 bg-blue-50 active:bg-blue-200 border border-blue-200 text-blue-900 rounded-xl text-left font-bold text-xs flex justify-between items-center transition">
+            <span>3. 和平</span><span class="text-[10px] text-blue-500 font-normal">報班+記</span>
+          </button>
+          <button type="button" onclick="handleLegClick(4, '婦幼')" class="p-2.5 bg-blue-50 active:bg-blue-200 border border-blue-200 text-blue-900 rounded-xl text-left font-bold text-xs flex justify-between items-center transition">
+            <span>4. 婦幼</span><span class="text-[10px] text-blue-500 font-normal">報班+記</span>
+          </button>
+        </div>
+        <button type="button" onclick="handleLegClick(5, '仁愛')" class="w-full mt-2 p-2.5 bg-indigo-50 active:bg-indigo-200 border border-indigo-200 text-indigo-900 rounded-xl text-left font-bold text-xs flex justify-between items-center transition">
+          <span>5. 仁愛 (第一輪送達)</span><span class="text-[10px] text-indigo-600 font-bold">報班+用印</span>
+        </button>
+      </div>
+
+      <!-- 午休分界 -->
+      <div class="flex items-center gap-2 py-0.5">
+        <div class="flex-grow border-t border-slate-200"></div>
+        <span class="text-[11px] font-bold text-amber-600 bg-amber-50 px-3 py-0.5 rounded-full border border-amber-200">🍱 午休時間</span>
+        <div class="flex-grow border-t border-slate-200"></div>
+      </div>
+
+      <!-- 下半天 -->
+      <div>
+        <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-800 mb-2">
+          <span>🌇 下午第二趟巡迴</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="handleLegClick(6, '昆明')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs flex justify-between items-center transition">
+            <span>6. 昆明</span><span class="text-[10px] text-emerald-600 font-normal">報班+記</span>
+          </button>
+          <button type="button" onclick="handleLegClick(7, '中興')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs flex justify-between items-center transition">
+            <span>7. 中興</span><span class="text-[10px] text-emerald-600 font-normal">報班+記</span>
+          </button>
+          <button type="button" onclick="handleLegClick(8, '和平')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs flex justify-between items-center transition">
+            <span>8. 和平</span><span class="text-[10px] text-emerald-600 font-normal">報班+記</span>
+          </button>
+          <button type="button" onclick="handleLegClick(9, '婦幼')" class="p-2.5 bg-emerald-50 active:bg-emerald-200 border border-emerald-200 text-emerald-900 rounded-xl text-left font-bold text-xs flex justify-between items-center transition">
+            <span>9. 婦幼</span><span class="text-[10px] text-emerald-600 font-normal">報班+記</span>
+          </button>
+        </div>
+        <button type="button" onclick="handleLegClick(10, '仁愛')" class="w-full mt-2 p-2.5 bg-indigo-50 active:bg-indigo-200 border border-indigo-200 text-indigo-900 rounded-xl text-left font-bold text-xs flex justify-between items-center transition">
+          <span>10. 仁愛 (第二輪終點送達)</span><span class="text-[10px] text-indigo-600 font-bold">報班+用印</span>
+        </button>
+      </div>
+
+      <!-- 下班清潔 -->
+      <div class="pt-2 border-t border-slate-100">
+        <button type="button" onclick="handleClockOut()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5 transition">
+          <span>🏁 下班啦！(登記今日裝備擦拭清潔時間)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 紀錄與 PDF 匯出區塊 -->
+    <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+      <div class="flex justify-between items-center">
+        <h2 class="text-xs font-bold text-slate-700">當前紀錄 (<span id="countText">0</span> 筆)</h2>
+        <button type="button" onclick="exportOfficialPDF()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow transition flex items-center gap-1">
+          📩 月底一鍵匯出用印 PDF
+        </button>
+      </div>
+      <div id="todayList" class="space-y-1.5 max-h-56 overflow-y-auto text-xs text-slate-600">
+        <!-- 紀錄會動態填入此處 -->
+      </div>
+    </section>
+
+    <!-- 印章管理彈窗 -->
+    <div id="stampModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-xl">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 class="font-bold text-sm text-slate-900">🔖 印章管理倉庫</h3>
+          <button type="button" onclick="closeStampModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg leading-none">&times;</button>
+        </div>
+
+        <!-- 新增印章 -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
+          <span class="block font-bold text-slate-700">➕ 新增/替換人員印章</span>
+          <select id="newStaffBranch" class="w-full p-2 border border-slate-300 rounded text-xs">
+            <option value="仁愛">仁愛院區</option>
+            <option value="和平">和平院區</option>
+            <option value="中興">中興院區</option>
+            <option value="昆明">昆明院區</option>
+            <option value="婦幼">婦幼院區</option>
+          </select>
+          <input type="text" id="newStaffName" placeholder="輸入姓名 (例如: 檢驗師G)" class="w-full p-2 border border-slate-300 rounded text-xs">
+          <input type="file" id="newStaffImg" accept="image/png,image/jpeg" class="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700">
+          <button type="button" onclick="addNewStamp()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
+            儲存至印章倉庫
+          </button>
+        </div>
+
+        <!-- 已儲存印章清單 -->
+        <div>
+          <span class="block text-xs font-bold text-slate-600 mb-2">已建立值班人員與印章狀態：</span>
+          <div id="stampsList" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // === 初始化今日日期 ===
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('inputDate').value = today;
+
+    // === 印章與人員倉庫 (LocalStorage) ===
+    function getStoredStamps() {
+      const defaultStamps = [
+        { id: '1', branch: '仁愛', name: '仁愛-檢驗師A', dataUrl: null },
+        { id: '2', branch: '仁愛', name: '仁愛-檢驗師B', dataUrl: null },
+        { id: '3', branch: '和平', name: '和平-檢驗師C', dataUrl: null },
+        { id: '4', branch: '中興', name: '中興-檢驗師D', dataUrl: null },
+        { id: '5', branch: '昆明', name: '昆明-檢驗師E', dataUrl: null },
+        { id: '6', branch: '婦幼', name: '婦幼-檢驗師F', dataUrl: null }
+      ];
+      return JSON.parse(localStorage.getItem('my_stamps_warehouse_v3')) || defaultStamps;
+    }
+
+    function saveStoredStamps(stamps) {
+      localStorage.setItem('my_stamps_warehouse_v3', JSON.stringify(stamps));
+      updateStaffDropdown();
+      renderStampsList();
+    }
+
+    // 建立下拉選單 (含院區分組 optgroup)
+    function updateStaffDropdown() {
+      const stamps = getStoredStamps();
+      const select = document.getElementById('staffSelect');
+      if (!select) return;
+      select.innerHTML = '';
+      
+      const branches = ['仁愛', '和平', '中興', '昆明', '婦幼'];
+      branches.forEach(b => {
+        const group = document.createElement('optgroup');
+        group.label = b;
+        stamps.filter(s => s.branch === b).forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.name; // 記錄人員名稱
+          opt.innerText = s.name.replace(`${b}-`, '');
+          group.appendChild(opt);
+        });
+        if (group.children.length > 0) {
+          select.appendChild(group);
+        }
+      });
+    }
+
+    // 印章彈窗開關與列表渲染
+    function openStampModal() {
+      document.getElementById('stampModal').classList.remove('hidden');
+      renderStampsList();
+    }
+
+    function closeStampModal() {
+      document.getElementById('stampModal').classList.add('hidden');
+    }
+
+    function renderStampsList() {
+      const stamps = getStoredStamps();
+      const list = document.getElementById('stampsList');
+      if (!list) return;
+      list.innerHTML = '';
+      
+      stamps.forEach(s => {
+        const item = document.createElement('div');
+        item.className = 'p-2 bg-slate-50 border border-slate-200 rounded flex justify-between items-center text-xs';
+        item.innerHTML = `
+          <div class="flex items-center gap-2">
+            ${s.dataUrl ? `<img src="${s.dataUrl}" class="w-8 h-8 object-contain bg-white border border-slate-200 rounded">` : '<span class="text-[10px] text-slate-400 border px-1 rounded">無圖檔</span>'}
+            <span class="font-bold text-slate-700">${s.name}</span>
+          </div>
+          <button type="button" onclick="removeStamp('${s.id}')" class="text-rose-500 font-bold hover:text-rose-700">刪除</button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function addNewStamp() {
+      const branch = document.getElementById('newStaffBranch').value;
+      const rawName = document.getElementById('newStaffName').value.trim();
+      const fileInput = document.getElementById('newStaffImg');
+      
+      if (!rawName) return alert('請輸入姓名！');
+      const fullName = `${branch}-${rawName}`;
+
+      const stamps = getStoredStamps();
+      const existingIdx = stamps.findIndex(s => s.name === fullName);
+
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          if (existingIdx >= 0) {
+            stamps[existingIdx].dataUrl = e.target.result;
+          } else {
+            stamps.push({ id: Date.now().toString(), branch: branch, name: fullName, dataUrl: e.target.result });
+          }
+          saveStoredStamps(stamps);
+          document.getElementById('newStaffName').value = '';
+          fileInput.value = '';
+          alert(`✅ 已成功儲存：${fullName} 印章`);
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        if (existingIdx >= 0) {
+          alert('該人員已存在！');
+        } else {
+          stamps.push({ id: Date.now().toString(), branch: branch, name: fullName, dataUrl: null });
+          saveStoredStamps(stamps);
+          document.getElementById('newStaffName').value = '';
+          alert(`✅ 已成功新增人員：${fullName}`);
+        }
+      }
+    }
+
+    function removeStamp(id) {
+      let stamps = getStoredStamps();
+      if (stamps.length <= 1) return alert('請至少保留一位值班人員！');
+      stamps = stamps.filter(s => s.id !== id);
+      saveStoredStamps(stamps);
+    }
+
+    // === 檢體切換狀態 ===
+    let currentSpecimen = true;
+
+    function toggleSpecimen(val) {
+      currentSpecimen = val;
+      const btnYes = document.getElementById('btnSpecimenYes');
+      const btnNo = document.getElementById('btnSpecimenNo');
+      if (val) {
+        btnYes.className = 'flex-1 py-1 bg-emerald-600 text-white rounded font-bold transition';
+        btnNo.className = 'flex-1 py-1 bg-slate-200 text-slate-700 rounded font-bold transition';
+      } else {
+        btnYes.className = 'flex-1 py-1 bg-slate-200 text-slate-700 rounded font-bold transition';
+        btnNo.className = 'flex-1 py-1 bg-rose-600 text-white rounded font-bold transition';
+      }
+    }
+
+    // === 打卡紀錄儲存與渲染 ===
+    function getRecords() {
+      return JSON.parse(localStorage.getItem('westline_trip_records_v3')) || [];
+    }
+
+    function saveRecords(records) {
+      localStorage.setItem('westline_trip_records_v3', JSON.stringify(records));
+      renderList();
+    }
+
+    function handleLegClick(legIndex, stationName) {
+      const staffSelect = document.getElementById('staffSelect');
+      const staffName = staffSelect ? staffSelect.value : '未指定';
+      const inputDate = document.getElementById('inputDate').value;
+      
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
+      
+      const isEndStation = (legIndex === 5 || legIndex === 10);
+      const newRecord = {
+        id: Date.now(),
+        legIndex: legIndex,
+        date: inputDate,
+        time: timeStr,
+        station: `${legIndex}. ${stationName}`,
+        staff: staffName,
+        hasSpecimen: currentSpecimen,
+        needStamp: isEndStation
+      };
+
+      const records = getRecords();
+      records.push(newRecord);
+      saveRecords(records);
+      alert(`✅ 打卡成功！\n站點：${newRecord.station}\n時間：${timeStr}\n值班：${staffName}\n檢體：${currentSpecimen ? '有' : '無'}`);
+    }
+
+    function handleClockOut() {
+      const inputDate = document.getElementById('inputDate').value;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+      const newRecord = {
+        id: Date.now(),
+        legIndex: 99,
+        date: inputDate,
+        time: timeStr,
+        station: '🏁 下班 (裝備擦拭清潔)',
+        staff: '本人',
+        hasSpecimen: false,
+        needStamp: false
+      };
+
+      const records = getRecords();
+      records.push(newRecord);
+      saveRecords(records);
+      alert(`🏁 下班時間登記成功！\n時間：${timeStr}`);
+    }
+
+    function renderList() {
+      const records = getRecords();
+      const listArea = document.getElementById('todayList');
+      const countText = document.getElementById('countText');
+
+      if (countText) countText.innerText = records.length;
+      if (!listArea) return;
+
+      if (records.length === 0) {
+        listArea.innerHTML = '<div class="text-center text-xs text-slate-400 py-3">尚無打卡紀錄</div>';
+        return;
+      }
+
+      listArea.innerHTML = records.map(r => `
+        <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center text-xs shadow-sm">
+          <div>
+            <div class="font-bold text-slate-800">${r.station} <span class="text-slate-400 font-mono ml-1">${r.time}</span></div>
+            <div class="text-[11px] text-slate-500 mt-0.5">值班：${r.staff} ｜ 檢體：<span class="${r.hasSpecimen ? 'text-emerald-600 font-bold' : 'text-slate-400'}">${r.hasSpecimen ? '有' : '無'}</span></div>
+          </div>
+          <button type="button" onclick="deleteRecord(${r.id})" class="text-rose-500 hover:text-rose-700 font-bold px-2 py-1">刪除</button>
+        </div>
+      `).join('');
+    }
+
+    function deleteRecord(id) {
+      let records = getRecords();
+      records = records.filter(r => r.id !== id);
+      saveRecords(records);
+    }
+
+    // === PDF 匯出與蓋印核心 ===
+    let loadedPdfBytes = null;
+    document.getElementById('pdfFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        loadedPdfBytes = await file.arrayBuffer();
+        alert('✅ 已載入自訂 PDF 範本！');
+      }
+    });
+
+    async function exportOfficialPDF() {
+      const records = getRecords();
+      if (records.length === 0) return alert('目前尚無任何打卡紀錄可供匯出！');
+
+      try {
+        let pdfDoc;
+        if (loadedPdfBytes) {
+          pdfDoc = await PDFLib.PDFDocument.load(loadedPdfBytes);
+        } else {
+          pdfDoc = await PDFLib.PDFDocument.create();
+          pdfDoc.addPage([595.28, 841.89]); // A4
+        }
+
+        const pages = pdfDoc.getPages();
+        const page1 = pages[0];
+        const stamps = getStoredStamps();
+
+        // 站點對應 Y 軸座標 (預設西線報表排版)
+        const legYMap = {
+          1: 650, 2: 615, 3: 580, 4: 545, 5: 510,
+          6: 440, 7: 405, 8: 370, 9: 335, 10: 300, 99: 240
+        };
+
+        for (const r of records) {
+          const yPos = legYMap[r.legIndex] || 200;
+          page1.drawText(`${r.date} ${r.time} - ${r.station} (${r.staff})`, {
+            x: 50,
+            y: yPos,
+            size: 9,
+            color: PDFLib.rgb(0.1, 0.1, 0.1)
+          });
+
+          // 如果需要印章且人員有綁定圖檔
+          if (r.needStamp) {
+            const matchedStamp = stamps.find(s => s.name === r.staff);
+            if (matchedStamp && matchedStamp.dataUrl) {
+              try {
+                const imgBytes = await fetch(matchedStamp.dataUrl).then(res => res.arrayBuffer());
+                let stampImg;
+                if (matchedStamp.dataUrl.startsWith('data:image/png')) {
+                  stampImg = await pdfDoc.embedPng(imgBytes);
+                } else {
+                  stampImg = await pdfDoc.embedJpg(imgBytes);
+                }
+                page1.drawImage(stampImg, {
+                  x: 360,
+                  y: yPos - 5,
+                  width: 36,
+                  height: 18
+                });
+              } catch (err) {
+                console.error('用印載入失敗', err);
+              }
+            }
+          }
+        }
+
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `西線日誌_${today}.pdf`;
+        link.click();
+      } catch (e) {
+        alert('匯出 PDF 失敗：' + e.message);
+      }
+    }
+
+    // 頁面初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      updateStaffDropdown();
+      renderStampsList();
+      renderList();
+    });
+  </script>
+</body>
+</html>
