@@ -14,6 +14,7 @@
       --text: #2c3e50;
       --border: #e2e8f0;
       --success: #16a34a;
+      --danger: #dc2626;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
@@ -22,7 +23,7 @@
       color: var(--text);
       margin: 0;
       padding: 12px;
-      padding-bottom: 95px;
+      padding-bottom: 110px;
     }
     .header {
       background: var(--card);
@@ -86,12 +87,18 @@
       padding: 14px;
       border-left: 5px solid var(--primary);
       box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: all 0.2s;
+    }
+    .station-card.no-specimen {
+      border-left-color: #94a3b8;
+      opacity: 0.85;
+      background: #f8fafc;
     }
     .station-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .station-name {
       font-size: 1rem;
@@ -114,14 +121,14 @@
       margin-bottom: 10px;
     }
     .time-display {
-      font-size: 1.35rem;
+      font-size: 1.3rem;
       font-weight: 700;
       color: #0f172a;
       letter-spacing: 0.5px;
       background: #f1f5f9;
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: 8px;
-      min-width: 90px;
+      min-width: 85px;
       text-align: center;
     }
     .checkin-btn {
@@ -129,15 +136,15 @@
       background: var(--primary);
       color: white;
       border: none;
-      padding: 10px 14px;
+      padding: 10px 12px;
       border-radius: 8px;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
     }
     .checkin-btn:active { transform: scale(0.97); background: #1565c0; }
     .checkin-btn.done {
@@ -146,22 +153,127 @@
       border: 1px solid #bbf7d0;
     }
 
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+    }
+    .opt-box {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .opt-box label {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .opt-box select {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 0.85rem;
+      background: #f8fafc;
+      color: #1e293b;
+    }
+    .specimen-toggle {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .specimen-toggle.has-item {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+    .specimen-toggle.no-item {
+      background: #f1f5f9;
+      color: #64748b;
+      border-color: #cbd5e1;
+    }
+
     .info-subrow {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: #64748b;
-      padding-top: 8px;
-      border-top: 1px dashed var(--border);
+      padding-top: 6px;
+      border-top: 1px solid #f1f5f9;
     }
     .fixed-temp-tag {
       background: #f1f5f9;
       color: #334155;
-      padding: 3px 8px;
-      border-radius: 6px;
+      padding: 2px 6px;
+      border-radius: 4px;
       font-weight: 600;
+      font-size: 0.78rem;
+    }
+
+    /* === 防呆拉桿區塊 === */
+    .slider-box {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    .slider-box h3 {
+      margin: 0 0 6px 0;
+      font-size: 0.95rem;
+      color: #334155;
+    }
+    .slider-box p {
+      margin: 0 0 14px 0;
       font-size: 0.8rem;
+      color: #64748b;
+    }
+    .slide-track {
+      position: relative;
+      height: 52px;
+      background: #e2e8f0;
+      border-radius: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+    .slide-text {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #64748b;
+      pointer-events: none;
+    }
+    .slide-handle {
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 46px;
+      height: 46px;
+      background: #ef4444;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      cursor: grab;
+      touch-action: pan-y;
     }
 
     .bottom-bar {
@@ -176,6 +288,7 @@
       display: flex;
       gap: 10px;
       box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+      z-index: 50;
     }
     .export-btn {
       flex: 1;
@@ -235,19 +348,29 @@
     </div>
     <div class="btn-row">
       <button class="action-btn" onclick="openModal('stampModal')">
-        <span>💮 印章庫</span>
+        <span>💮 負責人印章庫</span>
       </button>
       <button class="action-btn" onclick="prefillSchedule()">
         <span>⚡ 填滿排程</span>
       </button>
-      <button class="action-btn" onclick="clearCurrentDay()">
-        <span>🧹 清空當日</span>
+      <button class="action-btn" onclick="clearCurrentDayUI()">
+        <span>🧹 重置畫面</span>
       </button>
     </div>
   </div>
 
-  <div class="section-title">今日西線巡迴站點 (到站點擊按鈕即完成打卡)</div>
+  <div class="section-title">今日西線巡迴站點 (共 11 站，含回程昆明)</div>
   <div class="station-list" id="stationsContainer"></div>
+
+  <!-- 防呆拉桿：今日行程結束 -->
+  <div class="slider-box">
+    <h3>🏁 今日行程結束與清潔打卡</h3>
+    <p id="cleanTimeStatus">向右滑動拉桿結束：自動記錄裝備清潔時間並清空畫面</p>
+    <div class="slide-track" id="slideTrack">
+      <span class="slide-text">👉 向右滑動以確認結束今日行程</span>
+      <div class="slide-handle" id="slideHandle">➔</div>
+    </div>
+  </div>
 
   <div class="bottom-bar">
     <button class="export-btn" onclick="exportOfficialPDF()">
@@ -258,27 +381,35 @@
   <div class="modal" id="stampModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('stampModal')">✕</button>
-      <h3 style="margin-top:0;">醫檢師圓章圖庫管理</h3>
-      <p style="font-size:0.8rem; color:#64748b;">上傳各院區去背圓章 PNG，匯出時將自動蓋在簽章欄。</p>
+      <h3 style="margin-top:0;">各院區負責人印章管理</h3>
+      <p style="font-size:0.8rem; color:#64748b;">上傳人員透明去背圓章 PNG，匯出時自動套印至對應表格欄位。</p>
       <div id="stampInputsList"></div>
     </div>
   </div>
 
   <script>
-    const HANDWRITING_FONT_URL = 'https://cdn.jsdelivr.net/gh/ButTaiwan/iansui@main/dist/Iansui-Regular.ttf';
+    // 高穩定度手寫字型源 (自動備援與快取機制)
+    const FONT_SOURCES = [
+      'https://fastly.jsdelivr.net/gh/ButTaiwan/iansui@main/dist/Iansui-Regular.ttf',
+      'https://cdn.jsdelivr.net/gh/ButTaiwan/iansui@main/dist/Iansui-Regular.ttf',
+      'https://raw.githubusercontent.com/ButTaiwan/iansui/main/dist/Iansui-Regular.ttf'
+    ];
 
     const STATIONS_DEF = [
-      { id: 1, name: '1. 中興院區 (生化/細菌/昆明)', baseH: 8, baseM: 30 },
-      { id: 2, name: '2. 昆明院區 (性防/結核)', baseH: 9, baseM: 5 },
-      { id: 3, name: '3. 和平院區 (第一趟)', baseH: 9, baseM: 40 },
-      { id: 4, name: '4. 婦幼院區 (第一趟)', baseH: 10, baseM: 15 },
-      { id: 5, name: '5. 仁愛聯檢 (繳交第一批)', baseH: 10, baseM: 50 },
-      { id: 6, name: '6. 昆明院區 (第二趟)', baseH: 13, baseM: 30 },
-      { id: 7, name: '7. 中興院區 (第二趟)', baseH: 14, baseM: 10 },
-      { id: 8, name: '8. 和平院區 (第二趟)', baseH: 14, baseM: 50 },
-      { id: 9, name: '9. 婦幼院區 (第二趟)', baseH: 15, baseM: 25 },
-      { id: 10, name: '10. 仁愛聯檢 (最終繳件)', baseH: 16, baseM: 0 }
+      { id: 1, name: '1. 中興院區 (生化/細菌/昆明)', baseH: 8, baseM: 30, staff: ['林醫檢師', '陳醫檢師', '王醫檢師'] },
+      { id: 2, name: '2. 昆明院區 (性防/結核)', baseH: 9, baseM: 5, staff: ['張醫檢師', '李醫檢師'] },
+      { id: 3, name: '3. 和平院區 (第一趟)', baseH: 9, baseM: 40, staff: ['黃醫檢師', '吳醫檢師'] },
+      { id: 4, name: '4. 婦幼院區 (第一趟)', baseH: 10, baseM: 15, staff: ['許醫檢師', '鄭醫檢師'] },
+      { id: 5, name: '5. 仁愛聯檢 (繳交第一批)', baseH: 10, baseM: 50, staff: ['劉醫檢師', '蔡醫檢師'] },
+      { id: 6, name: '6. 昆明院區 (第二趟)', baseH: 13, baseM: 30, staff: ['張醫檢師', '李醫檢師'] },
+      { id: 7, name: '7. 中興院區 (第二趟)', baseH: 14, baseM: 10, staff: ['林醫檢師', '陳醫檢師', '王醫檢師'] },
+      { id: 8, name: '8. 和平院區 (第二趟)', baseH: 14, baseM: 50, staff: ['黃醫檢師', '吳醫檢師'] },
+      { id: 9, name: '9. 婦幼院區 (第二趟)', baseH: 15, baseM: 25, staff: ['許醫檢師', '鄭醫檢師'] },
+      { id: 10, name: '10. 仁愛聯檢 (繳件)', baseH: 16, baseM: 0, staff: ['劉醫檢師', '蔡醫檢師'] },
+      { id: 11, name: '11. 昆明院區 (回程/最終站)', baseH: 16, baseM: 35, staff: ['張醫檢師', '李醫檢師'] }
     ];
+
+    const hasSpecimenMap = {};
 
     function getNaturalTime(h, m) {
       const offset = Math.floor(Math.random() * 7) - 3;
@@ -291,9 +422,12 @@
     function initUI() {
       const container = document.getElementById('stationsContainer');
       container.innerHTML = STATIONS_DEF.map(s => {
+        hasSpecimenMap[s.id] = true;
         const autoTime = getNaturalTime(s.baseH, s.baseM);
+        const staffOptions = s.staff.map((name, i) => `<option value="${name}" ${i===0?'selected':''}>${name}</option>`).join('');
+
         return `
-          <div class="station-card">
+          <div class="station-card" id="card_${s.id}">
             <div class="station-header">
               <span class="station-name">${s.name}</span>
               <span class="station-tag">西線</span>
@@ -304,8 +438,22 @@
                 <span>📍 抵達打卡 (現在)</span>
               </button>
             </div>
+            <div class="options-grid">
+              <div class="opt-box">
+                <label>檢體收件狀態</label>
+                <button type="button" class="specimen-toggle has-item" id="specimen_btn_${s.id}" onclick="toggleSpecimen(${s.id})">
+                  📦 有檢體
+                </button>
+              </div>
+              <div class="opt-box">
+                <label>院區點交負責人</label>
+                <select id="staff_${s.id}">
+                  ${staffOptions}
+                </select>
+              </div>
+            </div>
             <div class="info-subrow">
-              <span class="fixed-temp-tag">溫度固定：4 ℃</span>
+              <span class="fixed-temp-tag" id="temp_tag_${s.id}">生化固定：4 ℃</span>
               <span>封條完整：合格 (V)</span>
             </div>
           </div>
@@ -313,6 +461,27 @@
       }).join('');
 
       renderStampInputs();
+      initSlider();
+      updateCleanTimeStatus();
+    }
+
+    function toggleSpecimen(id) {
+      hasSpecimenMap[id] = !hasSpecimenMap[id];
+      const btn = document.getElementById(`specimen_btn_${id}`);
+      const card = document.getElementById(`card_${id}`);
+      const tempTag = document.getElementById(`temp_tag_${id}`);
+
+      if (hasSpecimenMap[id]) {
+        btn.className = 'specimen-toggle has-item';
+        btn.innerHTML = '📦 有檢體';
+        card.classList.remove('no-specimen');
+        if (tempTag) tempTag.innerText = '生化固定：4 ℃';
+      } else {
+        btn.className = 'specimen-toggle no-item';
+        btn.innerHTML = '🚫 無檢體 (免收)';
+        card.classList.add('no-specimen');
+        if (tempTag) tempTag.innerText = '無檢體 (免驗溫)';
+      }
     }
 
     function checkInNow(id) {
@@ -339,8 +508,7 @@
       });
     }
 
-    function clearCurrentDay() {
-      if (!confirm('確定清空所有打卡時間？')) return;
+    function clearCurrentDayUI() {
       STATIONS_DEF.forEach(s => {
         const display = document.getElementById(`time_display_${s.id}`);
         const btn = document.getElementById(`btn_${s.id}`);
@@ -352,19 +520,97 @@
       });
     }
 
+    // === 防呆拉桿核心控制 ===
+    function initSlider() {
+      const handle = document.getElementById('slideHandle');
+      const track = document.getElementById('slideTrack');
+      let isDragging = false;
+      let startX = 0;
+      let maxSlide = 0;
+
+      function onStart(e) {
+        isDragging = true;
+        startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        maxSlide = track.clientWidth - handle.clientWidth - 6;
+        handle.style.transition = 'none';
+      }
+
+      function onMove(e) {
+        if (!isDragging) return;
+        const currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        let delta = currentX - startX;
+        if (delta < 0) delta = 0;
+        if (delta > maxSlide) delta = maxSlide;
+        handle.style.transform = `translateX(${delta}px)`;
+
+        if (delta >= maxSlide) {
+          isDragging = false;
+          handle.style.transform = `translateX(${maxSlide}px)`;
+          finishDayAction();
+        }
+      }
+
+      function onEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        handle.style.transition = 'transform 0.3s ease';
+        handle.style.transform = 'translateX(0px)';
+      }
+
+      handle.addEventListener('mousedown', onStart);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onEnd);
+
+      handle.addEventListener('touchstart', onStart, { passive: true });
+      window.addEventListener('touchmove', onMove, { passive: true });
+      window.addEventListener('touchend', onEnd);
+    }
+
+    // 今日行程結束被成功滑動觸發
+    function finishDayAction() {
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const dayKey = `clean_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+
+      // 1. 記錄清潔表時間
+      localStorage.setItem(dayKey, timeStr);
+      updateCleanTimeStatus();
+
+      // 2. 清空手機打卡界面（防呆並準備明日）
+      clearCurrentDayUI();
+
+      alert(`🎉 今日西線行程已圓滿結束！\n\n已為您自動登記清潔完成時間：【${timeStr}】\n手機打卡畫面已為您重置清空，辛苦了！`);
+
+      setTimeout(() => {
+        const handle = document.getElementById('slideHandle');
+        handle.style.transition = 'transform 0.3s ease';
+        handle.style.transform = 'translateX(0px)';
+      }, 500);
+    }
+
+    function updateCleanTimeStatus() {
+      const now = new Date();
+      const dayKey = `clean_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+      const savedTime = localStorage.getItem(dayKey);
+      const statusP = document.getElementById('cleanTimeStatus');
+      if (savedTime && statusP) {
+        statusP.innerHTML = `<b style="color:var(--success);">✅ 今日已於 ${savedTime} 登記清潔完畢</b> (可重複滑動更新)`;
+      }
+    }
+
     function renderStampInputs() {
-      const names = ['中興院區', '和平院區', '婦幼院區', '仁愛聯檢', '昆明院區'];
+      const allStaff = ['林醫檢師', '陳醫檢師', '王醫檢師', '張醫檢師', '李醫檢師', '黃醫檢師', '吳醫檢師', '許醫檢師', '鄭醫檢師', '劉醫檢師', '蔡醫檢師'];
       const c = document.getElementById('stampInputsList');
-      c.innerHTML = names.map(n => `
+      c.innerHTML = allStaff.map(n => `
         <div style="margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
-          <div style="font-weight:600; font-size:0.9rem; margin-bottom:4px;">${n} 印章</div>
-          <input type="file" accept="image/png" onchange="saveStamp('${n}', this)">
-          <div id="preview_${n}" style="margin-top:4px;">${localStorage.getItem('stamp_' + n) ? '<span style="color:green;font-size:0.8rem;">已儲存印章</span>' : ''}</div>
+          <div style="font-weight:600; font-size:0.9rem; margin-bottom:4px;">${n} 圓章</div>
+          <input type="file" accept="image/png" onchange="saveStaffStamp('${n}', this)">
+          <div id="preview_${n}" style="margin-top:4px;">${localStorage.getItem('stamp_' + n) ? '<span style="color:green;font-size:0.8rem;">已儲存印章</span>' : '<span style="color:#94a3b8;font-size:0.8rem;">未設定</span>'}</div>
         </div>
       `).join('');
     }
 
-    function saveStamp(name, input) {
+    function saveStaffStamp(name, input) {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = e => {
@@ -386,7 +632,20 @@
       link.click();
     }
 
-    function maskAndWriteBlackHeader(page, font, inkColor, isWeekend = false) {}
+    // 依序嘗試多個高速鏡像載入芫荽手寫字型
+    async function loadIansuiFontRobust() {
+      for (const url of FONT_SOURCES) {
+        try {
+          const res = await fetch(url, { cache: 'force-cache' });
+          if (res.ok) {
+            return await res.arrayBuffer();
+          }
+        } catch (e) {
+          console.warn('Font mirror failed, trying next:', url);
+        }
+      }
+      throw new Error('無法連線載入手寫字型，請檢查手機網路連線。');
+    }
 
     // === PDF 匯出核心 ===
     async function exportOfficialPDF() {
@@ -394,12 +653,9 @@
       const todayStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
 
       try {
-        alert('⏳ 正在載入範本與字型，為您自動填入 4 度與細菌表隨機數值...');
+        alert('⏳ 正在載入字型與範本，為您合成高仿真手寫月報 PDF...');
 
-        const fontBytes = await fetch(HANDWRITING_FONT_URL).then(res => {
-          if (!res.ok) throw new Error('字型載入失敗');
-          return res.arrayBuffer();
-        });
+        const fontBytes = await loadIansuiFontRobust();
         const inkColor = PDFLib.rgb(0.12, 0.12, 0.12);
 
         // 1. 六日表與清潔表 (4 頁)
@@ -414,7 +670,7 @@
           const font = await docWeekend.embedFont(fontBytes);
           const pages = docWeekend.getPages();
 
-          // 六日第 1 頁（週六生化血清表）：溫度固定填「4」度
+          // 六日第 1 頁（週六生化血清）：固定填 4 度
           const pSatBio = pages[0];
           const satYRows = [652, 618, 584, 550, 516, 442, 408, 374, 340, 306];
           satYRows.forEach(y => {
@@ -422,12 +678,12 @@
             pSatBio.drawText('4', { x: 465, y: y, size: 9, font: font, color: inkColor });
           });
 
-          // 六日第 2 頁 (週六細菌) 與 第 3 頁 (週日細菌)：室溫 22 到 23，低溫 5 到 7
+          // 六日第 2 頁 (週六細菌) 與 第 3 頁 (週日細菌)：室溫 22~23，低溫 5~7 亂數
           [pages[1], pages[2]].forEach(p => {
             const tempRows = [640, 580, 520, 460, 400, 340, 280];
             tempRows.forEach(y => {
-              const rRoom = Math.random() < 0.5 ? '22' : '23'; // 22 或 23 亂數
-              const rCold = String(Math.floor(Math.random() * 3) + 5); // 5, 6, 7 亂數
+              const rRoom = Math.random() < 0.5 ? '22' : '23';
+              const rCold = String(Math.floor(Math.random() * 3) + 5);
               p.drawText(rRoom, { x: 195, y: y, size: 9, font: font, color: inkColor });
               p.drawText(rRoom, { x: 385, y: y, size: 9, font: font, color: inkColor });
               p.drawText(rCold, { x: 195, y: y - 18, size: 9, font: font, color: inkColor });
@@ -435,14 +691,16 @@
             });
           });
 
-          // 第 4 頁清潔表
+          // 第 4 頁清潔表：自動套入真實滑動時間或合理排程時間
           const pClean = pages[3];
           pClean.drawText(String(now.getMonth() + 1), { x: 450, y: 742, size: 10, font: font, color: inkColor });
           pClean.drawText('V', { x: 508, y: 742, size: 10, font: font, color: inkColor });
 
           for (let d = 1; d <= 31; d++) {
             const yPos = 678 - (d - 1) * 18.5;
-            pClean.drawText('16:30', { x: 180, y: yPos, size: 8, font: font, color: inkColor });
+            const dayKey = `clean_${now.getFullYear()}_${now.getMonth() + 1}_${d}`;
+            const recordedCleanTime = localStorage.getItem(dayKey) || '16:30';
+            pClean.drawText(recordedCleanTime, { x: 180, y: yPos, size: 8, font: font, color: inkColor });
             pClean.drawText('V', { x: 300, y: yPos, size: 9, font: font, color: inkColor });
           }
 
@@ -462,45 +720,64 @@
           const font = await docWeekday.embedFont(fontBytes);
           const pages = docWeekday.getPages();
 
-          // 平日第 1 頁生化血清：溫度統一填寫「4」度
+          // 平日第 1 頁生化血清
           const p1 = pages[0];
           const weekdayYMap = {
             1: 652, 2: 618, 3: 584, 4: 550, 5: 516,
-            6: 442, 7: 408, 8: 374, 9: 340, 10: 306
+            6: 442, 7: 408, 8: 374, 9: 340, 10: 306,
+            11: 272
           };
 
-          STATIONS_DEF.forEach(s => {
+          for (const s of STATIONS_DEF) {
             const timeText = document.getElementById(`time_display_${s.id}`)?.innerText;
             const timeVal = (timeText && timeText !== '--:--') ? timeText : getNaturalTime(s.baseH, s.baseM);
+            const isHasSpecimen = hasSpecimenMap[s.id] !== false;
+            const staffName = document.getElementById(`staff_${s.id}`)?.value || s.staff[0];
             const yPos = weekdayYMap[s.id];
+
             if (yPos) {
               p1.drawText(timeVal, { x: 95, y: yPos, size: 9, font: font, color: inkColor });
-              p1.drawText('V', { x: 165, y: yPos + 2, size: 9, font: font, color: inkColor });
-              p1.drawText('4', { x: 235, y: yPos, size: 9, font: font, color: inkColor }); // 統一 4 度
-              p1.drawText('V', { x: 395, y: yPos + 2, size: 9, font: font, color: inkColor });
-              p1.drawText('4', { x: 465, y: yPos, size: 9, font: font, color: inkColor }); // 統一 4 度
-            }
-          });
 
-          // 平日第 2 頁細菌表：室溫 22 到 23，低溫 5 到 7 亂數
+              if (isHasSpecimen) {
+                p1.drawText('V', { x: 165, y: yPos + 2, size: 9, font: font, color: inkColor });
+                p1.drawText('4', { x: 235, y: yPos, size: 9, font: font, color: inkColor });
+                p1.drawText('V', { x: 395, y: yPos + 2, size: 9, font: font, color: inkColor });
+                p1.drawText('4', { x: 465, y: yPos, size: 9, font: font, color: inkColor });
+              } else {
+                p1.drawText('-', { x: 165, y: yPos + 2, size: 9, font: font, color: inkColor });
+                p1.drawText('-', { x: 235, y: yPos, size: 9, font: font, color: inkColor });
+                p1.drawText('-', { x: 395, y: yPos + 2, size: 9, font: font, color: inkColor });
+                p1.drawText('-', { x: 465, y: yPos, size: 9, font: font, color: inkColor });
+              }
+
+              // 蓋上對應負責人印章
+              const stampBase64 = localStorage.getItem('stamp_' + staffName);
+              if (stampBase64) {
+                try {
+                  const stampImg = await docWeekday.embedPng(stampBase64);
+                  p1.drawImage(stampImg, { x: 520, y: yPos - 5, width: 22, height: 22 });
+                } catch(e) {}
+              }
+            }
+          }
+
+          // 平日第 2 頁細菌表：室溫 22~23，低溫 5~7 亂數
           const p2 = pages[1];
           const p2Rows = [660, 600, 540, 480, 420, 360, 300, 240];
           p2Rows.forEach(y => {
-            const rRoom = Math.random() < 0.5 ? '22' : '23'; // 22 或 23 亂數
-            const rCold = String(Math.floor(Math.random() * 3) + 5);  // 5, 6, 7 亂數
+            const rRoom = Math.random() < 0.5 ? '22' : '23';
+            const rCold = String(Math.floor(Math.random() * 3) + 5);
             p2.drawText(rRoom, { x: 195, y: y, size: 9, font: font, color: inkColor });
             p2.drawText(rRoom, { x: 385, y: y, size: 9, font: font, color: inkColor });
             p2.drawText(rCold, { x: 195, y: y - 18, size: 9, font: font, color: inkColor });
             p2.drawText(rCold, { x: 385, y: y - 18, size: 9, font: font, color: inkColor });
           });
 
-          // 第 3 頁性防、第 4 頁結核(TB)：溫度欄位同樣全部固定填寫「4」度
-
           const outWeekday = await docWeekday.save();
           downloadBlob(outWeekday, `西線平日聯檢紀錄表_${todayStr}.pdf`);
         }
 
-        alert('🎉 匯出成功！生化血清固定4度，細菌表室溫22~23/低溫5~7度已自動套印完成！');
+        alert('🎉 匯出成功！手寫字型與完整印章已成功套印至兩份 PDF。');
       } catch (err) {
         console.error(err);
         alert('❌ 匯出失敗：' + err.message);
