@@ -178,33 +178,43 @@
     document.getElementById('inputDate').value = today;
 
     // 印章資料庫 (LocalStorage)
-    function getStoredStamps() {
-      const defaultStamps = [
-        { id: '1', name: '林檢驗師', dataUrl: null },
-        { id: '2', name: '陳檢驗師', dataUrl: null },
-        { id: '3', name: '張檢驗師', dataUrl: null },
-        { id: '4', name: '黃檢驗師', dataUrl: null }
-      ];
-      return JSON.parse(localStorage.getItem('my_stamps_warehouse')) || defaultStamps;
-    }
+    const defaultStamps = [
+  { id: '1', branch: '仁愛', name: '仁愛-檢驗師A', dataUrl: null },
+  { id: '2', branch: '仁愛', name: '仁愛-檢驗師B', dataUrl: null },
+  { id: '3', branch: '和平', name: '和平-檢驗師C', dataUrl: null },
+  { id: '4', branch: '中興', name: '中興-檢驗師D', dataUrl: null },
+  { id: '5', branch: '昆明', name: '昆明-檢驗師E', dataUrl: null },
+  { id: '6', branch: '婦幼', name: '婦幼-檢驗師F', dataUrl: null }
+];
+return JSON.parse(localStorage.getItem('my_stamps_warehouse_v2')) || defaultStamps;
+}
 
-    function saveStoredStamps(stamps) {
-      localStorage.setItem('my_stamps_warehouse', JSON.stringify(stamps));
-      updateStaffDropdown();
-      renderStampsList();
-    }
+function saveStoredStamps(stamps) {
+localStorage.setItem('my_stamps_warehouse_v2', JSON.stringify(stamps));
+updateStaffDropdown();
+renderStampsList();
+}
 
-    function updateStaffDropdown() {
-      const stamps = getStoredStamps();
-      const select = document.getElementById('staffSelect');
-      select.innerHTML = '';
-      stamps.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.id;
-        opt.innerText = s.name;
-        select.appendChild(opt);
-      });
-    }
+function updateStaffDropdown() {
+const stamps = getStoredStamps();
+const select = document.getElementById('staffSelect');
+select.innerHTML = '';
+
+const branches = ['仁愛', '和平', '中興', '昆明', '婦幼'];
+branches.forEach(b => {
+  const group = document.createElement('optgroup');
+  group.label = b;
+  stamps.filter(s => s.branch === b).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.innerText = s.name.replace(`${b}-`, '');
+    group.appendChild(opt);
+  });
+  if (group.children.length > 0) {
+    select.appendChild(group);
+  }
+});
+}
 
     // 印章彈窗操作
     function openStampModal() {
