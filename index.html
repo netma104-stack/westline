@@ -562,7 +562,7 @@
       saveRecords(records);
     }
 
-    // 抬頭遮罩並覆寫正黑文字
+   // 抬頭遮罩並覆寫正黑文字 (確保每個 drawText 都帶有 font: font)
     function maskAndWriteBlackHeader(page, font, inkColor, isWeekend = false) {
       // 遮蓋頂部廠商、車號、駕駛紅色字
       page.drawRectangle({
@@ -573,11 +573,11 @@
         color: PDFLib.rgb(1, 1, 1)
       });
 
-      page.drawText('合約廠商: 元鴻', { x: 50, y: 742, size: 9.5, font, color: inkColor });
+      page.drawText('合約廠商: 元鴻', { x: 50, y: 742, size: 9.5, font: font, color: inkColor });
       const lineText = isWeekend ? '路線: 星期六 / 假日' : '路線: 西線-平常日';
-      page.drawText(lineText, { x: 180, y: 742, size: 9.5, font, color: inkColor });
-      page.drawText('車號: KPB-3955', { x: 340, y: 742, size: 9.5, font, color: inkColor });
-      page.drawText('駕駛人: 廖曉維', { x: 440, y: 742, size: 9.5, font, color: inkColor });
+      page.drawText(lineText, { x: 180, y: 742, size: 9.5, font: font, color: inkColor });
+      page.drawText('車號: KPB-3955', { x: 340, y: 742, size: 9.5, font: font, color: inkColor });
+      page.drawText('駕駛人: 廖曉維', { x: 440, y: 742, size: 9.5, font: font, color: inkColor });
     }
 
     // === PDF 匯出核心 ===
