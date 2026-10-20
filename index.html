@@ -13,7 +13,6 @@
       --card: #ffffff;
       --text: #2c3e50;
       --border: #e2e8f0;
-      --success: #2e7d32;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
@@ -69,7 +68,6 @@
     }
     .action-btn:active { background: #e2e8f0; }
 
-    /* 主要站點清單 */
     .section-title {
       font-size: 0.9rem;
       font-weight: 700;
@@ -143,7 +141,6 @@
       font-weight: 600;
     }
 
-    /* 底部固定一鍵匯出列 */
     .bottom-bar {
       position: fixed;
       bottom: 0;
@@ -174,7 +171,6 @@
     }
     .export-btn:active { transform: scale(0.98); }
 
-    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -218,8 +214,8 @@
       <button class="action-btn" onclick="openModal('stampModal')">
         <span>💮 印章庫</span>
       </button>
-      <button class="action-btn" onclick="fillQuickTimes()">
-        <span>⚡ 填入現在</span>
+      <button class="action-btn" onclick="randomizeAllInputs()">
+        <span>🎲 隨機刷新</span>
       </button>
       <button class="action-btn" onclick="clearCurrentDay()">
         <span>🧹 清空當日</span>
@@ -227,7 +223,7 @@
     </div>
   </div>
 
-  <div class="section-title">今日巡迴打卡 (西線各站)</div>
+  <div class="section-title">今日巡迴打卡 (自動產生自然時間與合規溫度)</div>
   <div class="station-list" id="stationsContainer"></div>
 
   <div class="bottom-bar">
@@ -236,7 +232,6 @@
     </button>
   </div>
 
-  <!-- 印章管理彈窗 -->
   <div class="modal" id="stampModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('stampModal')">✕</button>
@@ -247,49 +242,78 @@
   </div>
 
   <script>
-    // 芫荽 (Iansui) 正體手寫風格字型
     const HANDWRITING_FONT_URL = 'https://cdn.jsdelivr.net/gh/ButTaiwan/iansui@main/dist/Iansui-Regular.ttf';
 
-    const STATIONS = [
-      { id: 1, name: '1. 中興院區 (生化/細菌/昆明)', defaultTime: '08:30', temp: '4.5' },
-      { id: 2, name: '2. 昆明院區 (性防/結核)', defaultTime: '09:05', temp: '4.2' },
-      { id: 3, name: '3. 和平院區 (第一趟)', defaultTime: '09:40', temp: '4.8' },
-      { id: 4, name: '4. 婦幼院區 (第一趟)', defaultTime: '10:15', temp: '5.0' },
-      { id: 5, name: '5. 仁愛聯檢 (繳交第一批)', defaultTime: '10:50', temp: '4.6' },
-      { id: 6, name: '6. 昆明院區 (第二趟)', defaultTime: '13:30', temp: '4.3' },
-      { id: 7, name: '7. 中興院區 (第二趟)', defaultTime: '14:10', temp: '4.7' },
-      { id: 8, name: '8. 和平院區 (第二趟)', defaultTime: '14:50', temp: '5.1' },
-      { id: 9, name: '9. 婦幼院區 (第二趟)', defaultTime: '15:25', temp: '4.9' },
-      { id: 10, name: '10. 仁愛聯檢 (最終繳件)', defaultTime: '16:00', temp: '4.5' }
+    // 基礎標準排程表
+    const STATIONS_DEF = [
+      { id: 1, name: '1. 中興院區 (生化/細菌/昆明)', baseH: 8, baseM: 30 },
+      { id: 2, name: '2. 昆明院區 (性防/結核)', baseH: 9, baseM: 5 },
+      { id: 3, name: '3. 和平院區 (第一趟)', baseH: 9, baseM: 40 },
+      { id: 4, name: '4. 婦幼院區 (第一趟)', baseH: 10, baseM: 15 },
+      { id: 5, name: '5. 仁愛聯檢 (繳交第一批)', baseH: 10, baseM: 50 },
+      { id: 6, name: '6. 昆明院區 (第二趟)', baseH: 13, baseM: 30 },
+      { id: 7, name: '7. 中興院區 (第二趟)', baseH: 14, baseM: 10 },
+      { id: 8, name: '8. 和平院區 (第二趟)', baseH: 14, baseM: 50 },
+      { id: 9, name: '9. 婦幼院區 (第二趟)', baseH: 15, baseM: 25 },
+      { id: 10, name: '10. 仁愛聯檢 (最終繳件)', baseH: 16, baseM: 0 }
     ];
 
-    // 初始化渲染
+    // 產生微幅自然浮動時間 (±3 分鐘)
+    function getNaturalTime(h, m) {
+      const offset = Math.floor(Math.random() * 7) - 3; // -3 ~ +3
+      let totalM = h * 60 + m + offset;
+      let finalH = Math.floor(totalM / 60);
+      let finalM = totalM % 60;
+      return `${String(finalH).padStart(2, '0')}:${String(finalM).padStart(2, '0')}`;
+    }
+
+    // 產生合規自然低溫 (4.2 ~ 5.2℃)
+    function getNaturalTemp() {
+      const temps = ['4.3', '4.5', '4.6', '4.8', '5.0', '5.1', '4.2', '4.7'];
+      return temps[Math.floor(Math.random() * temps.length)];
+    }
+
+    // 初始化界面與自動填入預設值
     function initUI() {
       const container = document.getElementById('stationsContainer');
-      container.innerHTML = STATIONS.map(s => `
-        <div class="station-card">
-          <div class="station-header">
-            <span class="station-name">${s.name}</span>
-            <span class="station-tag">西線</span>
-          </div>
-          <div class="input-grid">
-            <div class="input-group">
-              <label>到達時間</label>
-              <input type="time" id="time_${s.id}" value="${s.defaultTime}">
+      container.innerHTML = STATIONS_DEF.map(s => {
+        const autoTime = getNaturalTime(s.baseH, s.baseM);
+        const autoTemp = getNaturalTemp();
+        return `
+          <div class="station-card">
+            <div class="station-header">
+              <span class="station-name">${s.name}</span>
+              <span class="station-tag">西線</span>
             </div>
-            <div class="input-group">
-              <label>封箱溫度 (℃)</label>
-              <input type="number" step="0.1" id="temp_${s.id}" value="${s.temp}">
+            <div class="input-grid">
+              <div class="input-group">
+                <label>到達時間</label>
+                <input type="time" id="time_${s.id}" value="${autoTime}">
+              </div>
+              <div class="input-group">
+                <label>封箱溫度 (℃)</label>
+                <input type="number" step="0.1" id="temp_${s.id}" value="${autoTemp}">
+              </div>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">檢體封條完整合格</span>
+              <input type="checkbox" id="seal_${s.id}" checked style="width:20px;height:20px;">
             </div>
           </div>
-          <div class="toggle-row">
-            <span class="toggle-label">檢體封條完整合格</span>
-            <input type="checkbox" id="seal_${s.id}" checked style="width:20px;height:20px;">
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
 
       renderStampInputs();
+    }
+
+    // 一鍵刷新所有數值（自然重新隨機）
+    function randomizeAllInputs() {
+      STATIONS_DEF.forEach(s => {
+        const timeInput = document.getElementById(`time_${s.id}`);
+        const tempInput = document.getElementById(`temp_${s.id}`);
+        if (timeInput) timeInput.value = getNaturalTime(s.baseH, s.baseM);
+        if (tempInput) tempInput.value = getNaturalTemp();
+      });
     }
 
     function renderStampInputs() {
@@ -318,18 +342,9 @@
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    function fillQuickTimes() {
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      STATIONS.forEach(s => {
-        const el = document.getElementById(`time_${s.id}`);
-        if (el) el.value = timeStr;
-      });
-    }
-
     function clearCurrentDay() {
-      if (!confirm('確定清空今日填寫的時間與數值？')) return;
-      STATIONS.forEach(s => {
+      if (!confirm('確定清空今日數值？')) return;
+      STATIONS_DEF.forEach(s => {
         document.getElementById(`time_${s.id}`).value = '';
         document.getElementById(`temp_${s.id}`).value = '';
       });
@@ -343,10 +358,8 @@
       link.click();
     }
 
-    // 範本已有標準黑體抬頭，保留底圖原生印刷字
-    function maskAndWriteBlackHeader(page, font, inkColor, isWeekend = false) {
-      // 保持空白，無需額外覆蓋
-    }
+    // 保留底圖黑體字，此處不額外覆蓋
+    function maskAndWriteBlackHeader(page, font, inkColor, isWeekend = false) {}
 
     // === PDF 匯出核心 ===
     async function exportOfficialPDF() {
@@ -354,16 +367,15 @@
       const todayStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
 
       try {
-        alert('⏳ 正在載入靜態範本與手寫字型並合成 PDF，請稍候...');
+        alert('⏳ 正在載入範本與手寫字型並自動合成 PDF，請稍候...');
 
-        // 載入字型與基礎樣式
         const fontBytes = await fetch(HANDWRITING_FONT_URL).then(res => {
-          if (!res.ok) throw new Error('字型下載失敗');
+          if (!res.ok) throw new Error('字型載入失敗');
           return res.arrayBuffer();
         });
         const inkColor = PDFLib.rgb(0.12, 0.12, 0.12);
 
-        // 1. 處理六日與清潔表 (直接從 GitHub 根目錄抓取 template_weekend.pdf)
+        // 1. 六日表與清潔表
         let weekendBytes = null;
         try {
           weekendBytes = await fetch('template_weekend.pdf?v=' + Date.now()).then(res => res.ok ? res.arrayBuffer() : null);
@@ -374,11 +386,6 @@
           docWeekend.registerFontkit(fontkit);
           const font = await docWeekend.embedFont(fontBytes);
           const pages = docWeekend.getPages();
-
-          // 六日抬頭已由底圖印製，maskAndWriteBlackHeader 為空
-          for (let i = 0; i < 3; i++) {
-            maskAndWriteBlackHeader(pages[i], font, inkColor, true);
-          }
 
           // 細菌表溫度隨機 (第 2 頁週六細菌，第 3 頁週日細菌)
           [pages[1], pages[2]].forEach(p => {
@@ -408,7 +415,7 @@
           downloadBlob(outWeekend, `西線裝備清潔與六日聯檢表_${todayStr}.pdf`);
         }
 
-        // 2. 處理平日聯檢表 (4 頁，直接抓取 template_weekday.pdf)
+        // 2. 平日表
         let weekdayBytes = null;
         try {
           weekdayBytes = await fetch('template_weekday.pdf?v=' + Date.now()).then(res => res.ok ? res.arrayBuffer() : null);
@@ -420,9 +427,6 @@
           const font = await docWeekday.embedFont(fontBytes);
           const pages = docWeekday.getPages();
 
-          // 平日抬頭已由底圖印製
-          pages.forEach(p => maskAndWriteBlackHeader(p, font, inkColor, false));
-
           // 生化血清第 1 頁
           const p1 = pages[0];
           const weekdayYMap = {
@@ -430,9 +434,9 @@
             6: 442, 7: 408, 8: 374, 9: 340, 10: 306
           };
 
-          STATIONS.forEach(s => {
-            const timeVal = document.getElementById(`time_${s.id}`)?.value || s.defaultTime;
-            const tempVal = document.getElementById(`temp_${s.id}`)?.value || s.temp;
+          STATIONS_DEF.forEach(s => {
+            const timeVal = document.getElementById(`time_${s.id}`)?.value || getNaturalTime(s.baseH, s.baseM);
+            const tempVal = document.getElementById(`temp_${s.id}`)?.value || getNaturalTemp();
             const yPos = weekdayYMap[s.id];
             if (yPos) {
               p1.drawText(timeVal, { x: 95, y: yPos, size: 9, font: font, color: inkColor });
@@ -466,7 +470,6 @@
       }
     }
 
-    // 啟動畫面
     initUI();
   </script>
 </body>
