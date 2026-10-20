@@ -221,7 +221,7 @@
       font-size: 0.78rem;
     }
 
-    /* === 防呆拉桿區塊 === */
+    /* 滑動拉桿 */
     .slider-box {
       background: var(--card);
       border-radius: 14px;
@@ -307,6 +307,7 @@
     }
     .export-btn:active { transform: scale(0.98); }
 
+    /* Modal 與院區印章管理 */
     .modal {
       display: none;
       position: fixed;
@@ -334,6 +335,72 @@
       font-weight: 700;
       cursor: pointer;
     }
+    .hospital-group {
+      margin-bottom: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      background: #fafafa;
+    }
+    .hospital-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .staff-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      border: 1px solid #edf2f7;
+    }
+    .staff-name {
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+    .staff-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .add-staff-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .add-staff-input {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .add-staff-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .del-staff-btn {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -348,7 +415,7 @@
     </div>
     <div class="btn-row">
       <button class="action-btn" onclick="openModal('stampModal')">
-        <span>💮 負責人印章庫</span>
+        <span>💮 院區印章庫</span>
       </button>
       <button class="action-btn" onclick="prefillSchedule()">
         <span>⚡ 填滿排程</span>
@@ -362,7 +429,7 @@
   <div class="section-title">今日西線巡迴站點 (共 11 站，含回程昆明)</div>
   <div class="station-list" id="stationsContainer"></div>
 
-  <!-- 防呆拉桿：今日行程結束 -->
+  <!-- 防呆拉桿 -->
   <div class="slider-box">
     <h3>🏁 今日行程結束與清潔打卡</h3>
     <p id="cleanTimeStatus">向右滑動拉桿結束：自動記錄裝備清潔時間並清空畫面</p>
@@ -378,34 +445,56 @@
     </button>
   </div>
 
+  <!-- 依院區分組的印章管理 Modal -->
   <div class="modal" id="stampModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal('stampModal')">✕</button>
-      <h3 style="margin-top:0;">各院區負責人印章管理</h3>
-      <p style="font-size:0.8rem; color:#64748b;">上傳人員透明去背圓章 PNG，匯出時自動套印至對應表格欄位。</p>
-      <div id="stampInputsList"></div>
+      <h3 style="margin-top:0;">各院區負責人與印章管理</h3>
+      <p style="font-size:0.8rem; color:#64748b;">依院區維護醫檢師名單並上傳去背圓章，主頁選單將自動連動。</p>
+      <div id="hospitalGroupsList"></div>
     </div>
   </div>
 
   <script>
     const FONT_SOURCES = [
       'https://fastly.jsdelivr.net/gh/ButTaiwan/iansui@main/dist/Iansui-Regular.ttf',
-      'https://cdn.jsdelivr.net/gh/ButTaiwan/iansui@main/dist/Iansui-Regular.ttf',
-      'https://raw.githubusercontent.com/ButTaiwan/iansui/main/dist/Iansui-Regular.ttf'
+      'https://cdn.jsdelivr.net/gh/ButTaiwan/iansui@main/dist/Iansui-Regular.ttf'
     ];
 
+    // 院區及預設醫檢師名單
+    const DEFAULT_HOSPITALS = {
+      '中興': ['林醫檢師', '陳醫檢師', '王醫檢師'],
+      '昆明': ['張醫檢師', '李醫檢師'],
+      '和平': ['黃醫檢師', '吳醫檢師'],
+      '婦幼': ['許醫檢師', '鄭醫檢師'],
+      '仁愛': ['劉醫檢師', '蔡醫檢師']
+    };
+
+    function getHospitalStaffMap() {
+      const saved = localStorage.getItem('hospital_staff_map');
+      if (saved) {
+        try { return JSON.parse(saved); } catch(e) {}
+      }
+      return DEFAULT_HOSPITALS;
+    }
+
+    function saveHospitalStaffMap(map) {
+      localStorage.setItem('hospital_staff_map', JSON.stringify(map));
+    }
+
+    // 11 站定義與所屬院區綁定
     const STATIONS_DEF = [
-      { id: 1, name: '1. 中興院區 (生化/細菌/昆明)', baseH: 8, baseM: 30, staff: ['林醫檢師', '陳醫檢師', '王醫檢師'] },
-      { id: 2, name: '2. 昆明院區 (性防/結核)', baseH: 9, baseM: 5, staff: ['張醫檢師', '李醫檢師'] },
-      { id: 3, name: '3. 和平院區 (第一趟)', baseH: 9, baseM: 40, staff: ['黃醫檢師', '吳醫檢師'] },
-      { id: 4, name: '4. 婦幼院區 (第一趟)', baseH: 10, baseM: 15, staff: ['許醫檢師', '鄭醫檢師'] },
-      { id: 5, name: '5. 仁愛聯檢 (繳交第一批)', baseH: 10, baseM: 50, staff: ['劉醫檢師', '蔡醫檢師'] },
-      { id: 6, name: '6. 昆明院區 (第二趟)', baseH: 13, baseM: 30, staff: ['張醫檢師', '李醫檢師'] },
-      { id: 7, name: '7. 中興院區 (第二趟)', baseH: 14, baseM: 10, staff: ['林醫檢師', '陳醫檢師', '王醫檢師'] },
-      { id: 8, name: '8. 和平院區 (第二趟)', baseH: 14, baseM: 50, staff: ['黃醫檢師', '吳醫檢師'] },
-      { id: 9, name: '9. 婦幼院區 (第二趟)', baseH: 15, baseM: 25, staff: ['許醫檢師', '鄭醫檢師'] },
-      { id: 10, name: '10. 仁愛聯檢 (繳件)', baseH: 16, baseM: 0, staff: ['劉醫檢師', '蔡醫檢師'] },
-      { id: 11, name: '11. 昆明院區 (回程/最終站)', baseH: 16, baseM: 35, staff: ['張醫檢師', '李醫檢師'] }
+      { id: 1, name: '1. 中興院區 (生化/細菌/昆明)', hosp: '中興', baseH: 8, baseM: 30 },
+      { id: 2, name: '2. 昆明院區 (性防/結核)', hosp: '昆明', baseH: 9, baseM: 5 },
+      { id: 3, name: '3. 和平院區 (第一趟)', hosp: '和平', baseH: 9, baseM: 40 },
+      { id: 4, name: '4. 婦幼院區 (第一趟)', hosp: '婦幼', baseH: 10, baseM: 15 },
+      { id: 5, name: '5. 仁愛聯檢 (繳交第一批)', hosp: '仁愛', baseH: 10, baseM: 50 },
+      { id: 6, name: '6. 昆明院區 (第二趟)', hosp: '昆明', baseH: 13, baseM: 30 },
+      { id: 7, name: '7. 中興院區 (第二趟)', hosp: '中興', baseH: 14, baseM: 10 },
+      { id: 8, name: '8. 和平院區 (第二趟)', hosp: '和平', baseH: 14, baseM: 50 },
+      { id: 9, name: '9. 婦幼院區 (第二趟)', hosp: '婦幼', baseH: 15, baseM: 25 },
+      { id: 10, name: '10. 仁愛聯檢 (繳件)', hosp: '仁愛', baseH: 16, baseM: 0 },
+      { id: 11, name: '11. 昆明院區 (回程/最終站)', hosp: '昆明', baseH: 16, baseM: 35 }
     ];
 
     const hasSpecimenMap = {};
@@ -420,16 +509,19 @@
 
     function initUI() {
       const container = document.getElementById('stationsContainer');
+      const staffMap = getHospitalStaffMap();
+
       container.innerHTML = STATIONS_DEF.map(s => {
         hasSpecimenMap[s.id] = true;
         const autoTime = getNaturalTime(s.baseH, s.baseM);
-        const staffOptions = s.staff.map((name, i) => `<option value="${name}" ${i===0?'selected':''}>${name}</option>`).join('');
+        const staffList = staffMap[s.hosp] || [];
+        const staffOptions = staffList.map((name, i) => `<option value="${name}" ${i===0?'selected':''}>${name}</option>`).join('');
 
         return `
           <div class="station-card" id="card_${s.id}">
             <div class="station-header">
               <span class="station-name">${s.name}</span>
-              <span class="station-tag">西線</span>
+              <span class="station-tag">${s.hosp}</span>
             </div>
             <div class="card-body-row">
               <div class="time-display" id="time_display_${s.id}">${autoTime}</div>
@@ -445,7 +537,7 @@
                 </button>
               </div>
               <div class="opt-box">
-                <label>院區點交負責人</label>
+                <label>點交醫檢師 (${s.hosp})</label>
                 <select id="staff_${s.id}">
                   ${staffOptions}
                 </select>
@@ -459,9 +551,99 @@
         `;
       }).join('');
 
-      renderStampInputs();
+      renderHospitalGroups();
       initSlider();
       updateCleanTimeStatus();
+    }
+
+    function refreshDropdowns() {
+      const staffMap = getHospitalStaffMap();
+      STATIONS_DEF.forEach(s => {
+        const select = document.getElementById(`staff_${s.id}`);
+        if (select) {
+          const currentVal = select.value;
+          const staffList = staffMap[s.hosp] || [];
+          select.innerHTML = staffList.map(n => `<option value="${n}">${n}</option>`).join('');
+          if (staffList.includes(currentVal)) {
+            select.value = currentVal;
+          }
+        }
+      });
+    }
+
+    function renderHospitalGroups() {
+      const staffMap = getHospitalStaffMap();
+      const c = document.getElementById('hospitalGroupsList');
+      c.innerHTML = Object.keys(staffMap).map(hosp => {
+        const list = staffMap[hosp];
+        const staffHtml = list.map(name => `
+          <div class="staff-row">
+            <div>
+              <div class="staff-name">${name}</div>
+              <div style="font-size:0.75rem; color:#64748b;">
+                ${localStorage.getItem('stamp_' + name) ? '🟢 已有印章' : '⚪ 未上傳印章'}
+              </div>
+            </div>
+            <div class="staff-actions">
+              <input type="file" accept="image/png" id="file_${name}" style="display:none;" onchange="saveStaffStamp('${name}', this)">
+              <button style="border:1px solid #cbd5e1; background:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer;" onclick="document.getElementById('file_${name}').click()">
+                傳章
+              </button>
+              <button class="del-staff-btn" onclick="removeStaff('${hosp}', '${name}')">✕</button>
+            </div>
+          </div>
+        `).join('');
+
+        return `
+          <div class="hospital-group">
+            <div class="hospital-title">
+              <span>🏥 ${hosp}院區</span>
+              <span style="font-size:0.78rem; font-weight:normal; color:#64748b;">(${list.length} 人)</span>
+            </div>
+            ${staffHtml}
+            <div class="add-staff-row">
+              <input type="text" class="add-staff-input" id="new_input_${hosp}" placeholder="新增醫檢師姓名">
+              <button class="add-staff-btn" onclick="addStaff('${hosp}')">➕ 新增</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addStaff(hosp) {
+      const input = document.getElementById(`new_input_${hosp}`);
+      const val = input.value.trim();
+      if (!val) return;
+      const staffMap = getHospitalStaffMap();
+      if (!staffMap[hosp].includes(val)) {
+        staffMap[hosp].push(val);
+        saveHospitalStaffMap(staffMap);
+        renderHospitalGroups();
+        refreshDropdowns();
+      }
+      input.value = '';
+    }
+
+    function removeStaff(hosp, name) {
+      if (!confirm(`確定要刪除 ${hosp} 的「${name}」嗎？`)) return;
+      const staffMap = getHospitalStaffMap();
+      staffMap[hosp] = staffMap[hosp].filter(n => n !== name);
+      saveHospitalStaffMap(staffMap);
+      localStorage.removeItem('stamp_' + name);
+      renderHospitalGroups();
+      refreshDropdowns();
+    }
+
+    function saveStaffStamp(name, input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          localStorage.setItem('stamp_' + name, e.target.result);
+          renderHospitalGroups();
+          alert(`✅ ${name} 印章上傳儲存成功！`);
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
     }
 
     function toggleSpecimen(id) {
@@ -592,29 +774,6 @@
       }
     }
 
-    function renderStampInputs() {
-      const allStaff = ['林醫檢師', '陳醫檢師', '王醫檢師', '張醫檢師', '李醫檢師', '黃醫檢師', '吳醫檢師', '許醫檢師', '鄭醫檢師', '劉醫檢師', '蔡醫檢師'];
-      const c = document.getElementById('stampInputsList');
-      c.innerHTML = allStaff.map(n => `
-        <div style="margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
-          <div style="font-weight:600; font-size:0.9rem; margin-bottom:4px;">${n} 圓章</div>
-          <input type="file" accept="image/png" onchange="saveStaffStamp('${n}', this)">
-          <div id="preview_${n}" style="margin-top:4px;">${localStorage.getItem('stamp_' + n) ? '<span style="color:green;font-size:0.8rem;">已儲存印章</span>' : '<span style="color:#94a3b8;font-size:0.8rem;">未設定</span>'}</div>
-        </div>
-      `).join('');
-    }
-
-    function saveStaffStamp(name, input) {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          localStorage.setItem('stamp_' + name, e.target.result);
-          document.getElementById('preview_' + name).innerHTML = '<span style="color:green;font-size:0.8rem;">已儲存印章</span>';
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
-    }
-
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
@@ -626,21 +785,28 @@
       link.click();
     }
 
-    async function loadIansuiFontRobust() {
-      for (const url of FONT_SOURCES) {
-        try {
-          const res = await fetch(url, { cache: 'force-cache' });
-          if (res.ok) {
-            return await res.arrayBuffer();
-          }
-        } catch (e) {
-          console.warn('Font mirror failed, trying next:', url);
-        }
+    // 附帶 5 秒超時保護的字型載入
+    async function fetchWithTimeout(url, timeoutMs = 5000) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, { signal: controller.signal, cache: 'force-cache' });
+        clearTimeout(id);
+        if (res.ok) return await res.arrayBuffer();
+      } catch (e) {
+        clearTimeout(id);
       }
-      throw new Error('無法連線載入手寫字型，請檢查手機網路連線。');
+      return null;
     }
 
-    // === 真人手寫風：六日「完全上下置中 + 斜線」日期繪製 ===
+    async function loadIansuiFontSafe() {
+      for (const url of FONT_SOURCES) {
+        const buf = await fetchWithTimeout(url, 4000);
+        if (buf) return buf;
+      }
+      return null;
+    }
+
     function drawWeekendVerticalDate(page, font, inkColor, month, day, centerX, centerY) {
       const mStr = String(month);
       const dStr = String(day);
@@ -649,7 +815,6 @@
       page.drawText(dStr, { x: centerX - 5, y: centerY - 10, size: 8.5, font: font, color: inkColor });
     }
 
-    // === 真人手寫風：平日「左上/右下錯落」日期繪製 ===
     function drawWeekdayStaggeredDate(page, font, inkColor, month, day, baseX, baseY) {
       const mStr = String(month);
       const dStr = String(day);
@@ -658,7 +823,7 @@
       page.drawText(dStr, { x: baseX + 12,y: baseY - 4, size: 8.5, font: font, color: inkColor });
     }
 
-    // === PDF 匯出核心 ===
+    // PDF 匯出核心
     async function exportOfficialPDF() {
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
@@ -666,12 +831,12 @@
       const todayStr = `${now.getFullYear()}${String(currentMonth).padStart(2, '0')}${String(currentDay).padStart(2, '0')}`;
 
       try {
-        alert('⏳ 正在為您合成手寫月報 PDF（含上下斜線手寫日期），請稍候...');
+        alert('⏳ 正在為您合成月報 PDF，請稍候...');
 
-        const fontBytes = await loadIansuiFontRobust();
+        const fontBytes = await loadIansuiFontSafe();
         const inkColor = PDFLib.rgb(0.12, 0.12, 0.12);
 
-        // 1. 六日表與清潔表 (4 頁)
+        // 1. 六日表與清潔表
         let weekendBytes = null;
         try {
           weekendBytes = await fetch('template_weekend.pdf?v=' + Date.now()).then(res => res.ok ? res.arrayBuffer() : null);
@@ -679,11 +844,17 @@
 
         if (weekendBytes) {
           const docWeekend = await PDFLib.PDFDocument.load(weekendBytes);
-          docWeekend.registerFontkit(fontkit);
-          const font = await docWeekend.embedFont(fontBytes);
+          let font = null;
+          if (fontBytes) {
+            docWeekend.registerFontkit(fontkit);
+            font = await docWeekend.embedFont(fontBytes);
+          } else {
+            font = await docWeekend.embedFont(PDFLib.StandardFonts.Helvetica);
+          }
+
           const pages = docWeekend.getPages();
 
-          // 六日第 1 頁（週六生化血清）：窄格上下寫法 + 溫度 4 度
+          // 六日第 1 頁
           const pSatBio = pages[0];
           drawWeekendVerticalDate(pSatBio, font, inkColor, currentMonth, currentDay, 46, 510);
 
@@ -693,7 +864,7 @@
             pSatBio.drawText('4', { x: 465, y: y, size: 9, font: font, color: inkColor });
           });
 
-          // 六日第 2 頁 (週六細菌) 與 第 3 頁 (週日細菌)：窄格上下寫法 + 室溫 22~23 / 低溫 5~7
+          // 六日第 2, 3 頁
           [pages[1], pages[2]].forEach((p, idx) => {
             const thisDay = idx === 0 ? currentDay : (currentDay + 1);
             drawWeekendVerticalDate(p, font, inkColor, currentMonth, thisDay, 46, 510);
@@ -726,7 +897,7 @@
           downloadBlob(outWeekend, `西線裝備清潔與六日聯檢表_${todayStr}.pdf`);
         }
 
-        // 2. 平日表 (4 頁)
+        // 2. 平日表
         let weekdayBytes = null;
         try {
           weekdayBytes = await fetch('template_weekday.pdf?v=' + Date.now()).then(res => res.ok ? res.arrayBuffer() : null);
@@ -734,11 +905,17 @@
 
         if (weekdayBytes) {
           const docWeekday = await PDFLib.PDFDocument.load(weekdayBytes);
-          docWeekday.registerFontkit(fontkit);
-          const font = await docWeekday.embedFont(fontBytes);
+          let font = null;
+          if (fontBytes) {
+            docWeekday.registerFontkit(fontkit);
+            font = await docWeekday.embedFont(fontBytes);
+          } else {
+            font = await docWeekday.embedFont(PDFLib.StandardFonts.Helvetica);
+          }
+
           const pages = docWeekday.getPages();
 
-          // 平日第 1 頁生化血清：錯落手寫日期 + 11 站打卡
+          // 平日第 1 頁
           const p1 = pages[0];
           drawWeekdayStaggeredDate(p1, font, inkColor, currentMonth, currentDay, 45, 715);
 
@@ -752,7 +929,7 @@
             const timeText = document.getElementById(`time_display_${s.id}`)?.innerText;
             const timeVal = (timeText && timeText !== '--:--') ? timeText : getNaturalTime(s.baseH, s.baseM);
             const isHasSpecimen = hasSpecimenMap[s.id] !== false;
-            const staffName = document.getElementById(`staff_${s.id}`)?.value || s.staff[0];
+            const staffName = document.getElementById(`staff_${s.id}`)?.value;
             const yPos = weekdayYMap[s.id];
 
             if (yPos) {
@@ -770,18 +947,19 @@
                 p1.drawText('-', { x: 465, y: yPos, size: 9, font: font, color: inkColor });
               }
 
-              // 蓋上對應負責人印章
-              const stampBase64 = localStorage.getItem('stamp_' + staffName);
-              if (stampBase64) {
-                try {
-                  const stampImg = await docWeekday.embedPng(stampBase64);
-                  p1.drawImage(stampImg, { x: 520, y: yPos - 5, width: 22, height: 22 });
-                } catch(e) {}
+              if (staffName) {
+                const stampBase64 = localStorage.getItem('stamp_' + staffName);
+                if (stampBase64) {
+                  try {
+                    const stampImg = await docWeekday.embedPng(stampBase64);
+                    p1.drawImage(stampImg, { x: 520, y: yPos - 5, width: 22, height: 22 });
+                  } catch(e) {}
+                }
               }
             }
           }
 
-          // 平日第 2 頁細菌表：錯落手寫日期 + 室溫 22~23 / 低溫 5~7 亂數
+          // 平日第 2 頁細菌表
           const p2 = pages[1];
           drawWeekdayStaggeredDate(p2, font, inkColor, currentMonth, currentDay, 45, 715);
 
@@ -799,7 +977,7 @@
           downloadBlob(outWeekday, `西線平日聯檢紀錄表_${todayStr}.pdf`);
         }
 
-        alert('🎉 匯出成功！手寫上下錯落日期、溫度與印章已精準套印完成。');
+        alert('🎉 匯出成功！手寫日期、溫度與印章已精準套印完成。');
       } catch (err) {
         console.error(err);
         alert('❌ 匯出失敗：' + err.message);
