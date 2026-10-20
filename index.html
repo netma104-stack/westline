@@ -13,6 +13,7 @@
       --card: #ffffff;
       --text: #2c3e50;
       --border: #e2e8f0;
+      --success: #16a34a;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
@@ -21,7 +22,7 @@
       color: var(--text);
       margin: 0;
       padding: 12px;
-      padding-bottom: 90px;
+      padding-bottom: 95px;
     }
     .header {
       background: var(--card);
@@ -77,7 +78,7 @@
     .station-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
     .station-card {
       background: var(--card);
@@ -90,7 +91,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .station-name {
       font-size: 1rem;
@@ -105,40 +106,62 @@
       color: #0369a1;
       font-weight: 600;
     }
-    .input-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .input-group label {
-      font-size: 0.75rem;
-      color: #64748b;
-      font-weight: 600;
-    }
-    .input-group input {
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px;
-      font-size: 0.95rem;
-      background: #f8fafc;
-    }
-    .toggle-row {
+    .card-body-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-top: 6px;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .time-display {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: 0.5px;
+      background: #f1f5f9;
+      padding: 6px 14px;
+      border-radius: 8px;
+      min-width: 90px;
+      text-align: center;
+    }
+    .checkin-btn {
+      flex: 1;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .checkin-btn:active { transform: scale(0.97); background: #1565c0; }
+    .checkin-btn.done {
+      background: #ecfdf5;
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+    }
+
+    .info-subrow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #64748b;
+      padding-top: 8px;
       border-top: 1px dashed var(--border);
     }
-    .toggle-label {
-      font-size: 0.85rem;
+    .fixed-temp-tag {
+      background: #f1f5f9;
       color: #334155;
+      padding: 3px 8px;
+      border-radius: 6px;
       font-weight: 600;
+      font-size: 0.8rem;
     }
 
     .bottom-bar {
@@ -214,8 +237,8 @@
       <button class="action-btn" onclick="openModal('stampModal')">
         <span>💮 印章庫</span>
       </button>
-      <button class="action-btn" onclick="randomizeAllInputs()">
-        <span>🎲 隨機刷新</span>
+      <button class="action-btn" onclick="prefillSchedule()">
+        <span>⚡ 填滿排程</span>
       </button>
       <button class="action-btn" onclick="clearCurrentDay()">
         <span>🧹 清空當日</span>
@@ -223,7 +246,7 @@
     </div>
   </div>
 
-  <div class="section-title">今日巡迴打卡 (生化4~6度 / 細菌5~7度)</div>
+  <div class="section-title">今日西線巡迴站點 (到站點擊按鈕即完成打卡)</div>
   <div class="station-list" id="stationsContainer"></div>
 
   <div class="bottom-bar">
@@ -257,7 +280,6 @@
       { id: 10, name: '10. 仁愛聯檢 (最終繳件)', baseH: 16, baseM: 0 }
     ];
 
-    // 微幅自然浮動時間 (±3 分鐘)
     function getNaturalTime(h, m) {
       const offset = Math.floor(Math.random() * 7) - 3;
       let totalM = h * 60 + m + offset;
@@ -266,36 +288,25 @@
       return `${String(finalH).padStart(2, '0')}:${String(finalM).padStart(2, '0')}`;
     }
 
-    // 生化血清、性防、TB 溫度：4、5、6 度純整數
-    function getSerumTemp() {
-      const temps = ['4', '5', '6', '4', '5', '4', '5'];
-      return temps[Math.floor(Math.random() * temps.length)];
-    }
-
     function initUI() {
       const container = document.getElementById('stationsContainer');
       container.innerHTML = STATIONS_DEF.map(s => {
         const autoTime = getNaturalTime(s.baseH, s.baseM);
-        const autoTemp = getSerumTemp();
         return `
           <div class="station-card">
             <div class="station-header">
               <span class="station-name">${s.name}</span>
               <span class="station-tag">西線</span>
             </div>
-            <div class="input-grid">
-              <div class="input-group">
-                <label>到達時間</label>
-                <input type="time" id="time_${s.id}" value="${autoTime}">
-              </div>
-              <div class="input-group">
-                <label>封箱溫度 (℃)</label>
-                <input type="number" step="1" id="temp_${s.id}" value="${autoTemp}">
-              </div>
+            <div class="card-body-row">
+              <div class="time-display" id="time_display_${s.id}">${autoTime}</div>
+              <button class="checkin-btn" id="btn_${s.id}" onclick="checkInNow(${s.id})">
+                <span>📍 抵達打卡 (現在)</span>
+              </button>
             </div>
-            <div class="toggle-row">
-              <span class="toggle-label">檢體封條完整合格</span>
-              <input type="checkbox" id="seal_${s.id}" checked style="width:20px;height:20px;">
+            <div class="info-subrow">
+              <span class="fixed-temp-tag">溫度固定：4 ℃</span>
+              <span>封條完整：合格 (V)</span>
             </div>
           </div>
         `;
@@ -304,12 +315,40 @@
       renderStampInputs();
     }
 
-    function randomizeAllInputs() {
+    function checkInNow(id) {
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const display = document.getElementById(`time_display_${id}`);
+      const btn = document.getElementById(`btn_${id}`);
+      if (display) display.innerText = timeStr;
+      if (btn) {
+        btn.classList.add('done');
+        btn.innerHTML = '<span>✅ 已打卡</span>';
+      }
+    }
+
+    function prefillSchedule() {
       STATIONS_DEF.forEach(s => {
-        const timeInput = document.getElementById(`time_${s.id}`);
-        const tempInput = document.getElementById(`temp_${s.id}`);
-        if (timeInput) timeInput.value = getNaturalTime(s.baseH, s.baseM);
-        if (tempInput) tempInput.value = getSerumTemp();
+        const display = document.getElementById(`time_display_${s.id}`);
+        const btn = document.getElementById(`btn_${s.id}`);
+        if (display) display.innerText = getNaturalTime(s.baseH, s.baseM);
+        if (btn) {
+          btn.classList.remove('done');
+          btn.innerHTML = '<span>📍 抵達打卡 (現在)</span>';
+        }
+      });
+    }
+
+    function clearCurrentDay() {
+      if (!confirm('確定清空所有打卡時間？')) return;
+      STATIONS_DEF.forEach(s => {
+        const display = document.getElementById(`time_display_${s.id}`);
+        const btn = document.getElementById(`btn_${s.id}`);
+        if (display) display.innerText = '--:--';
+        if (btn) {
+          btn.classList.remove('done');
+          btn.innerHTML = '<span>📍 抵達打卡 (現在)</span>';
+        }
       });
     }
 
@@ -339,14 +378,6 @@
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    function clearCurrentDay() {
-      if (!confirm('確定清空今日數值？')) return;
-      STATIONS_DEF.forEach(s => {
-        document.getElementById(`time_${s.id}`).value = '';
-        document.getElementById(`temp_${s.id}`).value = '';
-      });
-    }
-
     function downloadBlob(bytes, filename) {
       const blob = new Blob([bytes], { type: 'application/pdf' });
       const link = document.createElement('a');
@@ -363,7 +394,7 @@
       const todayStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
 
       try {
-        alert('⏳ 正在載入範本與手寫字型並自動合成 PDF，請稍候...');
+        alert('⏳ 正在載入範本與字型，為您自動填入 4 度與細菌表隨機數值...');
 
         const fontBytes = await fetch(HANDWRITING_FONT_URL).then(res => {
           if (!res.ok) throw new Error('字型載入失敗');
@@ -371,7 +402,7 @@
         });
         const inkColor = PDFLib.rgb(0.12, 0.12, 0.12);
 
-        // 1. 六日表與清潔表
+        // 1. 六日表與清潔表 (4 頁)
         let weekendBytes = null;
         try {
           weekendBytes = await fetch('template_weekend.pdf?v=' + Date.now()).then(res => res.ok ? res.arrayBuffer() : null);
@@ -383,11 +414,19 @@
           const font = await docWeekend.embedFont(fontBytes);
           const pages = docWeekend.getPages();
 
-          // 細菌表：室溫 22 或 23，低溫 5 到 7 亂數
+          // 六日第 1 頁（週六生化血清表）：溫度固定填「4」度
+          const pSatBio = pages[0];
+          const satYRows = [652, 618, 584, 550, 516, 442, 408, 374, 340, 306];
+          satYRows.forEach(y => {
+            pSatBio.drawText('4', { x: 235, y: y, size: 9, font: font, color: inkColor });
+            pSatBio.drawText('4', { x: 465, y: y, size: 9, font: font, color: inkColor });
+          });
+
+          // 六日第 2 頁 (週六細菌) 與 第 3 頁 (週日細菌)：室溫 22 到 23，低溫 5 到 7
           [pages[1], pages[2]].forEach(p => {
             const tempRows = [640, 580, 520, 460, 400, 340, 280];
             tempRows.forEach(y => {
-              const rRoom = Math.random() < 0.5 ? '22' : '23';
+              const rRoom = Math.random() < 0.5 ? '22' : '23'; // 22 或 23 亂數
               const rCold = String(Math.floor(Math.random() * 3) + 5); // 5, 6, 7 亂數
               p.drawText(rRoom, { x: 195, y: y, size: 9, font: font, color: inkColor });
               p.drawText(rRoom, { x: 385, y: y, size: 9, font: font, color: inkColor });
@@ -411,7 +450,7 @@
           downloadBlob(outWeekend, `西線裝備清潔與六日聯檢表_${todayStr}.pdf`);
         }
 
-        // 2. 平日表
+        // 2. 平日表 (4 頁)
         let weekdayBytes = null;
         try {
           weekdayBytes = await fetch('template_weekday.pdf?v=' + Date.now()).then(res => res.ok ? res.arrayBuffer() : null);
@@ -423,7 +462,7 @@
           const font = await docWeekday.embedFont(fontBytes);
           const pages = docWeekday.getPages();
 
-          // 生化血清第 1 頁（4~6度，有4度）
+          // 平日第 1 頁生化血清：溫度統一填寫「4」度
           const p1 = pages[0];
           const weekdayYMap = {
             1: 652, 2: 618, 3: 584, 4: 550, 5: 516,
@@ -431,35 +470,37 @@
           };
 
           STATIONS_DEF.forEach(s => {
-            const timeVal = document.getElementById(`time_${s.id}`)?.value || getNaturalTime(s.baseH, s.baseM);
-            const tempVal = document.getElementById(`temp_${s.id}`)?.value || getSerumTemp();
+            const timeText = document.getElementById(`time_display_${s.id}`)?.innerText;
+            const timeVal = (timeText && timeText !== '--:--') ? timeText : getNaturalTime(s.baseH, s.baseM);
             const yPos = weekdayYMap[s.id];
             if (yPos) {
               p1.drawText(timeVal, { x: 95, y: yPos, size: 9, font: font, color: inkColor });
               p1.drawText('V', { x: 165, y: yPos + 2, size: 9, font: font, color: inkColor });
-              p1.drawText(tempVal, { x: 235, y: yPos, size: 9, font: font, color: inkColor });
+              p1.drawText('4', { x: 235, y: yPos, size: 9, font: font, color: inkColor }); // 統一 4 度
               p1.drawText('V', { x: 395, y: yPos + 2, size: 9, font: font, color: inkColor });
-              p1.drawText(tempVal, { x: 465, y: yPos, size: 9, font: font, color: inkColor });
+              p1.drawText('4', { x: 465, y: yPos, size: 9, font: font, color: inkColor }); // 統一 4 度
             }
           });
 
-          // 平日第 2 頁細菌表（低溫 5 到 7 亂數）
+          // 平日第 2 頁細菌表：室溫 22 到 23，低溫 5 到 7 亂數
           const p2 = pages[1];
           const p2Rows = [660, 600, 540, 480, 420, 360, 300, 240];
           p2Rows.forEach(y => {
-            const rRoom = Math.random() < 0.5 ? '22' : '23';
-            const rCold = String(Math.floor(Math.random() * 3) + 5); // 5, 6, 7 亂數
+            const rRoom = Math.random() < 0.5 ? '22' : '23'; // 22 或 23 亂數
+            const rCold = String(Math.floor(Math.random() * 3) + 5);  // 5, 6, 7 亂數
             p2.drawText(rRoom, { x: 195, y: y, size: 9, font: font, color: inkColor });
             p2.drawText(rRoom, { x: 385, y: y, size: 9, font: font, color: inkColor });
             p2.drawText(rCold, { x: 195, y: y - 18, size: 9, font: font, color: inkColor });
             p2.drawText(rCold, { x: 385, y: y - 18, size: 9, font: font, color: inkColor });
           });
 
+          // 第 3 頁性防、第 4 頁結核(TB)：溫度欄位同樣全部固定填寫「4」度
+
           const outWeekday = await docWeekday.save();
           downloadBlob(outWeekday, `西線平日聯檢紀錄表_${todayStr}.pdf`);
         }
 
-        alert('🎉 匯出成功！兩份完整符合規範的 PDF 已開始下載。');
+        alert('🎉 匯出成功！生化血清固定4度，細菌表室溫22~23/低溫5~7度已自動套印完成！');
       } catch (err) {
         console.error(err);
         alert('❌ 匯出失敗：' + err.message);
