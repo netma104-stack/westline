@@ -388,7 +388,6 @@
   </div>
 
   <script>
-    // 高穩定度手寫字型源 (自動備援與快取機制)
     const FONT_SOURCES = [
       'https://fastly.jsdelivr.net/gh/ButTaiwan/iansui@main/dist/Iansui-Regular.ttf',
       'https://cdn.jsdelivr.net/gh/ButTaiwan/iansui@main/dist/Iansui-Regular.ttf',
@@ -520,7 +519,6 @@
       });
     }
 
-    // === 防呆拉桿核心控制 ===
     function initSlider() {
       const handle = document.getElementById('slideHandle');
       const track = document.getElementById('slideTrack');
@@ -566,17 +564,13 @@
       window.addEventListener('touchend', onEnd);
     }
 
-    // 今日行程結束被成功滑動觸發
     function finishDayAction() {
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       const dayKey = `clean_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
 
-      // 1. 記錄清潔表時間
       localStorage.setItem(dayKey, timeStr);
       updateCleanTimeStatus();
-
-      // 2. 清空手機打卡界面（防呆並準備明日）
       clearCurrentDayUI();
 
       alert(`🎉 今日西線行程已圓滿結束！\n\n已為您自動登記清潔完成時間：【${timeStr}】\n手機打卡畫面已為您重置清空，辛苦了！`);
@@ -632,7 +626,6 @@
       link.click();
     }
 
-    // 依序嘗試多個高速鏡像載入芫荽手寫字型
     async function loadIansuiFontRobust() {
       for (const url of FONT_SOURCES) {
         try {
@@ -647,13 +640,33 @@
       throw new Error('無法連線載入手寫字型，請檢查手機網路連線。');
     }
 
+    // === 真人手寫風：六日「完全上下置中 + 斜線」日期繪製 ===
+    function drawWeekendVerticalDate(page, font, inkColor, month, day, centerX, centerY) {
+      const mStr = String(month);
+      const dStr = String(day);
+      page.drawText(mStr, { x: centerX - 5, y: centerY + 10, size: 8.5, font: font, color: inkColor });
+      page.drawText('/',   { x: centerX - 2, y: centerY,      size: 8.5, font: font, color: inkColor });
+      page.drawText(dStr, { x: centerX - 5, y: centerY - 10, size: 8.5, font: font, color: inkColor });
+    }
+
+    // === 真人手寫風：平日「左上/右下錯落」日期繪製 ===
+    function drawWeekdayStaggeredDate(page, font, inkColor, month, day, baseX, baseY) {
+      const mStr = String(month);
+      const dStr = String(day);
+      page.drawText(mStr, { x: baseX,     y: baseY + 4, size: 8.5, font: font, color: inkColor });
+      page.drawText('/',   { x: baseX + 8, y: baseY,     size: 8.5, font: font, color: inkColor });
+      page.drawText(dStr, { x: baseX + 12,y: baseY - 4, size: 8.5, font: font, color: inkColor });
+    }
+
     // === PDF 匯出核心 ===
     async function exportOfficialPDF() {
       const now = new Date();
-      const todayStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+      const currentMonth = now.getMonth() + 1;
+      const currentDay = now.getDate();
+      const todayStr = `${now.getFullYear()}${String(currentMonth).padStart(2, '0')}${String(currentDay).padStart(2, '0')}`;
 
       try {
-        alert('⏳ 正在載入字型與範本，為您合成高仿真手寫月報 PDF...');
+        alert('⏳ 正在為您合成手寫月報 PDF（含上下斜線手寫日期），請稍候...');
 
         const fontBytes = await loadIansuiFontRobust();
         const inkColor = PDFLib.rgb(0.12, 0.12, 0.12);
@@ -670,16 +683,21 @@
           const font = await docWeekend.embedFont(fontBytes);
           const pages = docWeekend.getPages();
 
-          // 六日第 1 頁（週六生化血清）：固定填 4 度
+          // 六日第 1 頁（週六生化血清）：窄格上下寫法 + 溫度 4 度
           const pSatBio = pages[0];
+          drawWeekendVerticalDate(pSatBio, font, inkColor, currentMonth, currentDay, 46, 510);
+
           const satYRows = [652, 618, 584, 550, 516, 442, 408, 374, 340, 306];
           satYRows.forEach(y => {
             pSatBio.drawText('4', { x: 235, y: y, size: 9, font: font, color: inkColor });
             pSatBio.drawText('4', { x: 465, y: y, size: 9, font: font, color: inkColor });
           });
 
-          // 六日第 2 頁 (週六細菌) 與 第 3 頁 (週日細菌)：室溫 22~23，低溫 5~7 亂數
-          [pages[1], pages[2]].forEach(p => {
+          // 六日第 2 頁 (週六細菌) 與 第 3 頁 (週日細菌)：窄格上下寫法 + 室溫 22~23 / 低溫 5~7
+          [pages[1], pages[2]].forEach((p, idx) => {
+            const thisDay = idx === 0 ? currentDay : (currentDay + 1);
+            drawWeekendVerticalDate(p, font, inkColor, currentMonth, thisDay, 46, 510);
+
             const tempRows = [640, 580, 520, 460, 400, 340, 280];
             tempRows.forEach(y => {
               const rRoom = Math.random() < 0.5 ? '22' : '23';
@@ -691,14 +709,14 @@
             });
           });
 
-          // 第 4 頁清潔表：自動套入真實滑動時間或合理排程時間
+          // 第 4 頁清潔表
           const pClean = pages[3];
-          pClean.drawText(String(now.getMonth() + 1), { x: 450, y: 742, size: 10, font: font, color: inkColor });
+          pClean.drawText(String(currentMonth), { x: 450, y: 742, size: 10, font: font, color: inkColor });
           pClean.drawText('V', { x: 508, y: 742, size: 10, font: font, color: inkColor });
 
           for (let d = 1; d <= 31; d++) {
             const yPos = 678 - (d - 1) * 18.5;
-            const dayKey = `clean_${now.getFullYear()}_${now.getMonth() + 1}_${d}`;
+            const dayKey = `clean_${now.getFullYear()}_${currentMonth}_${d}`;
             const recordedCleanTime = localStorage.getItem(dayKey) || '16:30';
             pClean.drawText(recordedCleanTime, { x: 180, y: yPos, size: 8, font: font, color: inkColor });
             pClean.drawText('V', { x: 300, y: yPos, size: 9, font: font, color: inkColor });
@@ -720,8 +738,10 @@
           const font = await docWeekday.embedFont(fontBytes);
           const pages = docWeekday.getPages();
 
-          // 平日第 1 頁生化血清
+          // 平日第 1 頁生化血清：錯落手寫日期 + 11 站打卡
           const p1 = pages[0];
+          drawWeekdayStaggeredDate(p1, font, inkColor, currentMonth, currentDay, 45, 715);
+
           const weekdayYMap = {
             1: 652, 2: 618, 3: 584, 4: 550, 5: 516,
             6: 442, 7: 408, 8: 374, 9: 340, 10: 306,
@@ -761,8 +781,10 @@
             }
           }
 
-          // 平日第 2 頁細菌表：室溫 22~23，低溫 5~7 亂數
+          // 平日第 2 頁細菌表：錯落手寫日期 + 室溫 22~23 / 低溫 5~7 亂數
           const p2 = pages[1];
+          drawWeekdayStaggeredDate(p2, font, inkColor, currentMonth, currentDay, 45, 715);
+
           const p2Rows = [660, 600, 540, 480, 420, 360, 300, 240];
           p2Rows.forEach(y => {
             const rRoom = Math.random() < 0.5 ? '22' : '23';
@@ -777,7 +799,7 @@
           downloadBlob(outWeekday, `西線平日聯檢紀錄表_${todayStr}.pdf`);
         }
 
-        alert('🎉 匯出成功！手寫字型與完整印章已成功套印至兩份 PDF。');
+        alert('🎉 匯出成功！手寫上下錯落日期、溫度與印章已精準套印完成。');
       } catch (err) {
         console.error(err);
         alert('❌ 匯出失敗：' + err.message);
